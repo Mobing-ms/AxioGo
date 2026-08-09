@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #050608;
+    color: #FFFFFF;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Technical Background Grid Utility */
+.bg-tech-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(32, 39, 49, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(32, 39, 49, 0.25) 1px, transparent 1px);
+}
+
+.bg-dot-grid {
+  background-size: 24px 24px;
+  background-image: radial-gradient(circle, rgba(174, 184, 196, 0.12) 1px, transparent 1px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050608;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #202731;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #34404C;
+}
+
+/* Neon Glows */
+.glow-red {
+  box-shadow: 0 0 25px rgba(255, 48, 70, 0.25);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 25px rgba(32, 214, 210, 0.25);
+}
+
+.border-glow-red {
+  box-shadow: inset 0 0 12px rgba(255, 48, 70, 0.15), 0 0 12px rgba(255, 48, 70, 0.15);
+}
+
+.border-glow-cyan {
+  box-shadow: inset 0 0 12px rgba(32, 214, 210, 0.15), 0 0 12px rgba(32, 214, 210, 0.15);
+}
+
+/* Glass & Panel styling */
+.panel-dark {
+  background: #090C11;
+  border: 1px solid #202731;
+}
+
+.card-dark {
+  background: #0C1117;
+  border: 1px solid #202731;
+}
+
+.card-dark:hover {
+  border-color: #27323D;
+}
