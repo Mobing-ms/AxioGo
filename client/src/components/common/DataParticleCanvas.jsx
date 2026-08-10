@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 export const DataParticleCanvas = ({
   className = '',
-  particleCount = 700,
+  particleCount = 800,
   interactive = true
 }) => {
   const canvasRef = useRef(null);
@@ -48,10 +48,10 @@ export const DataParticleCanvas = ({
     const particles = [];
 
     const colors = [
-      '#e7c76f',
-      '#20D6D2',
-      '#3B82F6',
-      '#AEB8C4'
+      '#e04d4dff',
+      '#d83f3fff',
+      '#f6483bff',
+      '#e45f5fff'
     ];
 
     for (let i = 0; i < effectiveCount; i++) {
@@ -728,9 +728,9 @@ export const DataParticleCanvas = ({
 
             ctx.strokeStyle =
               p.color ===
-                '#FF3046'
-                ? 'rgba(255, 48, 70, 0.12)'
-                : 'rgba(32, 214, 210, 0.10)';
+                '#e94454ff'
+                ? 'rgba(233, 32, 52, 0.23)'
+                : 'rgba(226, 59, 59, 0.18)';
 
             ctx.lineWidth = 0.7;
 
@@ -747,7 +747,6 @@ export const DataParticleCanvas = ({
       // ==========================================================
       // FLOATING DATA LABELS
       // ==========================================================
-
       ctx.font =
         '10px "Poppins", sans-serif';
 
@@ -775,7 +774,7 @@ export const DataParticleCanvas = ({
           }
 
           ctx.fillStyle =
-            '#AEB8C4';
+            '#4a596bff';
 
           ctx.globalAlpha =
             label.alpha;
@@ -792,7 +791,6 @@ export const DataParticleCanvas = ({
 
       t += 0.016;
     };
-
     // ============================================================
     // RENDER
     // ============================================================
