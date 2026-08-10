@@ -2,35 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* ================================================================
+   AXIOGO — GLOBAL FOUNDATION
+================================================================ */
+
 @layer base {
+  html {
+    background: #050608;
+    scroll-behavior: smooth;
+  }
+
   body {
-    background-color: #050608;
-    color: #FFFFFF;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    margin: 0;
+    background:
+      radial-gradient(circle at 50% 0%,
+        rgba(255, 48, 70, 0.025),
+        transparent 35%),
+      #050608;
+
+    color: #ffffff;
+
+    font-family:
+      'Plus Jakarta Sans',
+      sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
   h2,
   h3,
+  h4,
+  h5,
+  h6,
   .font-display {
-    font-family: 'Poppins', sans-serif;
+    font-family:
+      'Poppins',
+      sans-serif;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  ::selection {
+    background: rgba(255, 48, 70, 0.25);
+    color: #ffffff;
   }
 }
 
-/* Technical Background Grid Utility */
+
+/* ================================================================
+   TECHNICAL BACKGROUND GRID
+================================================================ */
+
 .bg-tech-grid {
   background-size: 32px 32px;
+
   background-image:
-    linear-gradient(to right, rgba(32, 39, 49, 0.25) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(32, 39, 49, 0.25) 1px, transparent 1px);
+    linear-gradient(to right,
+      rgba(32, 39, 49, 0.18) 1px,
+      transparent 1px),
+    linear-gradient(to bottom,
+      rgba(32, 39, 49, 0.18) 1px,
+      transparent 1px);
 }
 
 .bg-dot-grid {
   background-size: 24px 24px;
-  background-image: radial-gradient(circle, rgba(174, 184, 196, 0.12) 1px, transparent 1px);
+
+  background-image:
+    radial-gradient(circle,
+      rgba(174, 184, 196, 0.08) 1px,
+      transparent 1px);
 }
 
-/* Custom Scrollbar */
+
+/* ================================================================
+   CINEMATIC AXIOGO GRID
+================================================================ */
+
+.axio-grid {
+  background-size: 42px 42px;
+
+  background-image:
+    linear-gradient(to right,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px),
+    linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px);
+}
+
+.axio-grid-red {
+  background-size: 42px 42px;
+
+  background-image:
+    linear-gradient(to right,
+      rgba(255, 48, 70, 0.025) 1px,
+      transparent 1px),
+    linear-gradient(to bottom,
+      rgba(255, 48, 70, 0.025) 1px,
+      transparent 1px);
+}
+
+
+/* ================================================================
+   AXIOGO AMBIENT LIGHT
+================================================================ */
+
+.axio-red-ambient {
+  background:
+    radial-gradient(circle,
+      rgba(255, 48, 70, 0.10) 0%,
+      rgba(255, 48, 70, 0.035) 35%,
+      transparent 70%);
+}
+
+.axio-cyan-ambient {
+  background:
+    radial-gradient(circle,
+      rgba(32, 214, 210, 0.045) 0%,
+      rgba(32, 214, 210, 0.015) 35%,
+      transparent 70%);
+}
+
+
+/* ================================================================
+   CUSTOM SCROLLBAR
+================================================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -42,14 +148,26 @@
 
 ::-webkit-scrollbar-thumb {
   background: #202731;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #34404C;
+  background: #34404c;
 }
 
-/* Elegant focus treatment — replaces the browser's harsh rectangular outline
-   with a soft ambient ring, while keeping a visible state for keyboard users. */
+
+/* Firefox */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #202731 #050608;
+}
+
+
+/* ================================================================
+   FOCUS STATES
+================================================================ */
+
 a,
 button,
 input,
@@ -75,56 +193,645 @@ textarea:focus-visible,
 select:focus-visible,
 [tabindex]:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 48, 70, 0.28), 0 0 16px rgba(255, 48, 70, 0.18);
-  transition: box-shadow 200ms ease;
+
+  box-shadow:
+    0 0 0 2px rgba(255, 48, 70, 0.20),
+    0 0 18px rgba(255, 48, 70, 0.12);
+
+  transition:
+    box-shadow 200ms ease;
 }
 
-/* Respect reduced-motion preferences across custom keyframe animations */
+
+/* ================================================================
+   AXIOGO RED GLOWS
+================================================================ */
+
+.glow-red {
+  box-shadow:
+    0 0 25px rgba(255, 48, 70, 0.18);
+}
+
+.glow-red-soft {
+  box-shadow:
+    0 0 40px rgba(255, 48, 70, 0.08);
+}
+
+.glow-red-strong {
+  box-shadow:
+    0 0 20px rgba(255, 48, 70, 0.20),
+    0 0 60px rgba(255, 48, 70, 0.08);
+}
+
+.text-glow-red {
+  text-shadow:
+    0 0 25px rgba(255, 48, 70, 0.20);
+}
+
+
+/* ================================================================
+   RESTRAINED CYAN
+================================================================ */
+
+.glow-cyan {
+  box-shadow:
+    0 0 25px rgba(32, 214, 210, 0.12);
+}
+
+.text-glow-cyan {
+  text-shadow:
+    0 0 20px rgba(32, 214, 210, 0.12);
+}
+
+
+/* ================================================================
+   BORDER GLOWS
+================================================================ */
+
+.border-glow-red {
+  box-shadow:
+    inset 0 0 12px rgba(255, 48, 70, 0.06),
+    0 0 18px rgba(255, 48, 70, 0.08);
+}
+
+.border-glow-cyan {
+  box-shadow:
+    inset 0 0 12px rgba(32, 214, 210, 0.04),
+    0 0 15px rgba(32, 214, 210, 0.05);
+}
+
+
+/* ================================================================
+   GLASS / PANEL SYSTEM
+================================================================ */
+
+.panel-dark {
+  background: rgba(9, 12, 17, 0.72);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.card-dark {
+  background: rgba(12, 17, 23, 0.72);
+
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 350ms ease,
+    box-shadow 350ms ease,
+    border-color 350ms ease;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.card-dark:hover {
+  background: rgba(16, 22, 29, 0.82);
+
+  box-shadow:
+    0 18px 45px -25px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(255, 48, 70, 0.035);
+
+  transform: translateY(-3px);
+}
+
+.card-dark:active {
+  transform:
+    translateY(-1px) scale(0.998);
+}
+
+
+/* ================================================================
+   SUBTLE TECHNICAL DIVIDERS
+================================================================ */
+
+.axio-divider {
+  width: 100%;
+  height: 1px;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(32, 39, 49, 0.8),
+      transparent);
+}
+
+.axio-divider-red {
+  width: 100%;
+  height: 1px;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 48, 70, 0.35),
+      rgba(32, 39, 49, 0.7),
+      transparent);
+}
+
+
+/* ================================================================
+   GRADIENT TYPOGRAPHY
+================================================================ */
+
+.axio-gradient-text {
+  color: transparent;
+
+  background-image:
+    linear-gradient(90deg,
+      #ff3046 0%,
+      #ff5263 42%,
+      #ffffff 100%);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+.axio-gradient-text-soft {
+  color: transparent;
+
+  background-image:
+    linear-gradient(90deg,
+      #ffffff 0%,
+      #ff5263 55%,
+      #ff3046 100%);
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+
+/* ================================================================
+   SCROLL REVEAL SYSTEM
+   Used by landing-page sections.
+================================================================ */
+
+.axio-reveal {
+  opacity: 0;
+
+  transform:
+    translateY(42px) scale(0.985);
+
+  transition:
+    opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axio-reveal.is-visible {
+  opacity: 1;
+
+  transform:
+    translateY(0) scale(1);
+}
+
+
+/* Directional variants */
+
+.axio-reveal-left {
+  opacity: 0;
+
+  transform:
+    translateX(-45px) scale(0.985);
+
+  transition:
+    opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axio-reveal-left.is-visible {
+  opacity: 1;
+
+  transform:
+    translateX(0) scale(1);
+}
+
+
+.axio-reveal-right {
+  opacity: 0;
+
+  transform:
+    translateX(45px) scale(0.985);
+
+  transition:
+    opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axio-reveal-right.is-visible {
+  opacity: 1;
+
+  transform:
+    translateX(0) scale(1);
+}
+
+
+/* ================================================================
+   STAGGER HELPERS
+================================================================ */
+
+.axio-delay-1 {
+  transition-delay: 100ms;
+}
+
+.axio-delay-2 {
+  transition-delay: 200ms;
+}
+
+.axio-delay-3 {
+  transition-delay: 300ms;
+}
+
+.axio-delay-4 {
+  transition-delay: 400ms;
+}
+
+.axio-delay-5 {
+  transition-delay: 500ms;
+}
+
+.axio-delay-6 {
+  transition-delay: 600ms;
+}
+
+
+/* ================================================================
+   FLOATING / AMBIENT MOTION
+================================================================ */
+
+@keyframes axioFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.axio-float {
+  animation:
+    axioFloat 6s ease-in-out infinite;
+}
+
+
+/* ================================================================
+   SOFT RED PULSE
+================================================================ */
+
+@keyframes axioRedPulse {
+
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.axio-red-pulse {
+  animation:
+    axioRedPulse 2.8s ease-in-out infinite;
+}
+
+
+/* ================================================================
+   DATA STREAM EFFECT
+================================================================ */
+
+@keyframes axioDataFlow {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.axio-data-flow {
+  position: relative;
+  overflow: hidden;
+}
+
+.axio-data-flow::after {
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  width: 35%;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 48, 70, 0.16),
+      transparent);
+
+  animation:
+    axioDataFlow 4s ease-in-out infinite;
+
+  pointer-events: none;
+}
+
+
+/* ================================================================
+   HERO / SECTION ENTRY
+================================================================ */
+
+@keyframes axioHeroRise {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(35px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0) scale(1);
+  }
+}
+
+.axio-hero-rise {
+  animation:
+    axioHeroRise 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+
+/* ================================================================
+   FADE IN
+================================================================ */
+
+@keyframes axioFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.axio-fade-in {
+  animation:
+    axioFadeIn 700ms ease-out both;
+}
+
+
+/* ================================================================
+   SCALE REVEAL
+================================================================ */
+
+@keyframes axioScaleReveal {
+  from {
+    opacity: 0;
+
+    transform:
+      scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(1);
+  }
+}
+
+.axio-scale-reveal {
+  animation:
+    axioScaleReveal 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+
+/* ================================================================
+   ACTIVE RED UNDERLINE
+================================================================ */
+
+.axio-active-line {
+  position: relative;
+}
+
+.axio-active-line::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  bottom: -5px;
+
+  width: 100%;
+  height: 1px;
+
+  background: #ff3046;
+
+  box-shadow:
+    0 0 8px rgba(255, 48, 70, 0.5);
+
+  transform:
+    scaleX(0);
+
+  transform-origin: left;
+
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axio-active-line:hover::after,
+.axio-active-line.active::after {
+  transform:
+    scaleX(1);
+}
+
+
+/* ================================================================
+   TECHNICAL LABEL
+================================================================ */
+
+.axio-label {
+  font-family: monospace;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+
+  color: #8d98a7;
+}
+
+
+/* ================================================================
+   RED STATUS DOT
+================================================================ */
+
+.axio-status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 999px;
+
+  background: #ff3046;
+
+  box-shadow:
+    0 0 8px rgba(255, 48, 70, 0.7);
+
+  animation:
+    axioRedPulse 2.2s ease-in-out infinite;
+}
+
+
+/* ================================================================
+   RED BUTTON ATMOSPHERE
+================================================================ */
+
+.axio-button-red {
+  background: #ff3046;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 12px 35px rgba(255, 48, 70, 0.16);
+
+  transition:
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 250ms ease,
+    box-shadow 300ms ease;
+}
+
+.axio-button-red:hover {
+  background: #ff3f54;
+
+  box-shadow:
+    0 16px 45px rgba(255, 48, 70, 0.24);
+
+  transform:
+    translateY(-2px);
+}
+
+.axio-button-red:active {
+  transform:
+    translateY(0) scale(0.985);
+}
+
+
+/* ================================================================
+   RED GRADIENT LINE
+================================================================ */
+
+.axio-red-line {
+  height: 1px;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 48, 70, 0.75),
+      transparent);
+}
+
+
+/* ================================================================
+   RED PARTICLE / NODE
+================================================================ */
+
+.axio-node {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 999px;
+
+  background: #ff3046;
+
+  box-shadow:
+    0 0 12px rgba(255, 48, 70, 0.65);
+}
+
+.axio-node-cyan {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 999px;
+
+  background: #20d6d2;
+
+  opacity: 0.45;
+
+  box-shadow:
+    0 0 10px rgba(32, 214, 210, 0.35);
+}
+
+
+/* ================================================================
+   REDUCED MOTION
+================================================================ */
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+
     transition-duration: 0.001ms !important;
+
     scroll-behavior: auto !important;
+  }
+
+  .axio-reveal,
+  .axio-reveal-left,
+  .axio-reveal-right {
+    opacity: 1;
+
+    transform: none;
   }
 }
 
-/* Neon Glows */
-.glow-red {
-  box-shadow: 0 0 25px rgba(255, 48, 70, 0.25);
-}
 
-.glow-cyan {
-  box-shadow: 0 0 25px rgba(32, 214, 210, 0.25);
-}
+/* ================================================================
+   MOBILE TUNING
+================================================================ */
 
-.border-glow-red {
-  box-shadow: inset 0 0 12px rgba(255, 48, 70, 0.15), 0 0 12px rgba(255, 48, 70, 0.15);
-}
+@media (max-width: 640px) {
+  .bg-tech-grid {
+    background-size: 28px 28px;
+  }
 
-.border-glow-cyan {
-  box-shadow: inset 0 0 12px rgba(32, 214, 210, 0.15), 0 0 12px rgba(32, 214, 210, 0.15);
-}
+  .axio-grid,
+  .axio-grid-red {
+    background-size: 30px 30px;
+  }
 
-/* Glass & Panel styling */
-.panel-dark {
-  background: #090C11;
-}
-
-.card-dark {
-  background: #0C1117;
-  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease, background-color 250ms ease;
-}
-
-.card-dark:hover {
-  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 48, 70, 0.06);
-  transform: translateY(-2px);
-}
-
-.card-dark:active {
-  transform: translateY(-1px) scale(0.998);
-  background-color: #10161D;
+  .axio-red-ambient {
+    opacity: 0.65;
+  }
 }

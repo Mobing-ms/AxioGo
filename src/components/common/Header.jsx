@@ -15,98 +15,42 @@ export const Header = ({
   setActivePage,
   onOpenNotifications
 }) => {
-  const {
-    currentRole,
-    currentUser,
-    switchRole
-  } = useAuth();
+  const { currentRole, currentUser, switchRole } = useAuth();
+  const { notifications } = useWorkspace();
 
-  const {
-    notifications
-  } = useWorkspace();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
-  const [isScrolled, setIsScrolled] =
-    useState(false);
-
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] =
-    useState(false);
-
-  const unreadCount =
-    notifications.filter(
-      (n) => !n.read
-    ).length;
-
-
-  /* ================================================================
-     HEADER SCROLL STATE
-  ================================================================= */
+  const unreadCount = notifications.filter(
+    (n) => !n.read
+  ).length;
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(
-        window.scrollY > 20
-      );
+      setIsScrolled(window.scrollY > 20);
     };
 
-    window.addEventListener(
-      'scroll',
-      handleScroll,
-      { passive: true }
-    );
+    window.addEventListener('scroll', handleScroll, {
+      passive: true
+    });
 
-    return () =>
-      window.removeEventListener(
-        'scroll',
-        handleScroll
-      );
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
-
-  /* ================================================================
-     NAVIGATION
-  ================================================================= */
-
   const navItems = [
-    {
-      id: 'landing',
-      label: 'Home'
-    },
-
-    {
-      id: 'dashboard',
-      label: 'Dashboard'
-    },
-
-    {
-      id: 'catalog',
-      label: 'Data Catalog'
-    },
-
-    {
-      id: 'analytics',
-      label: 'Analytics & Reports'
-    },
-
-    {
-      id: 'axis',
-      label: 'AXIS AI'
-    },
-
-    {
-      id: 'actions',
-      label: 'Actions & Governance'
-    },
+    { id: 'landing', label: 'Home' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'catalog', label: 'Data Catalog' },
+    { id: 'analytics', label: 'Analytics & Reports' },
+    { id: 'axis', label: 'AXIS AI' },
+    { id: 'actions', label: 'Actions & Governance' },
 
     ...(currentRole === ROLES.ADMIN
-      ? [
-        {
-          id: 'admin',
-          label: 'Admin'
-        }
-      ]
+      ? [{ id: 'admin', label: 'Admin' }]
       : [])
   ];
-
 
   return (
     <header
@@ -118,15 +62,14 @@ export const Header = ({
         z-40
         transition-all
         duration-300
-
         ${isScrolled
           ? `
-              bg-axio-bg/90
-              backdrop-blur-xl
+              bg-[#07090D]/90
+              backdrop-blur-2xl
               border-b
-              border-axio-border/70
+              border-white/[0.045]
               py-2.5
-              shadow-xl
+              shadow-[0_10px_40px_rgba(0,0,0,0.35)]
             `
           : `
               bg-transparent
@@ -135,10 +78,6 @@ export const Header = ({
         }
       `}
     >
-
-      {/* ==========================================================
-          HEADER CONTAINER
-      ========================================================== */}
 
       <div
         className="
@@ -153,190 +92,136 @@ export const Header = ({
       >
 
         {/* ========================================================
-            BRAND + NAVIGATION
+            AXIOGO TEXT BRAND
         ======================================================== */}
 
-        <div
+        <button
+          onClick={() => setActivePage('landing')}
           className="
+            group
             flex
             items-center
-            gap-7
-            min-w-0
+            shrink-0
+            select-none
+            mr-8
           "
+          aria-label="AxioGo Home"
         >
-
-          {/* ======================================================
-              AXIOGO BRAND
-          ====================================================== */}
-
-          <button
-            onClick={() =>
-              setActivePage('landing')
-            }
+          <span
             className="
-              group
-              flex
-              items-center
-              gap-3
-              shrink-0
-              select-none
+              font-display
+              font-black
+              text-[24px]
+              sm:text-[26px]
+              leading-none
+              tracking-[-0.045em]
+              whitespace-nowrap
             "
-            aria-label="AxioGo Home"
           >
-
-            {/* ----------------------------------------------------
-                AXIOGO LOGO MARK
-
-                Larger + forced white
-            ---------------------------------------------------- */}
-
-            <div
+            <span
               className="
-                relative
-                h-10
-                w-10
-                flex
-                items-center
-                justify-center
-                shrink-0
+                text-white
+                transition-opacity
+                duration-300
+                group-hover:opacity-90
               "
             >
-              <img
-                src="/logo.png"
-                alt="AxioGo"
-                className="
-                  h-10
-                  w-10
-                  object-contain
-                  brightness-0
-                  invert
-                  transition-transform
-                  duration-300
-                  group-hover:scale-105
-                "
-              />
-            </div>
-
-
-            {/* ----------------------------------------------------
-                AXIOGO WORDMARK
-
-                Axio = white
-                Go   = red
-            ---------------------------------------------------- */}
+              Axio
+            </span>
 
             <span
               className="
-                font-display
-                font-extrabold
-                text-[21px]
-                leading-none
-                tracking-[-0.035em]
-                whitespace-nowrap
-                flex
-                items-center
+                text-axio-red
+                drop-shadow-[0_0_14px_rgba(255,48,70,0.18)]
+                transition-all
+                duration-300
+                group-hover:drop-shadow-[0_0_20px_rgba(255,48,70,0.35)]
               "
             >
-              <span className="text-white">
-                Axio
-              </span>
-
-              <span className="text-axio-red">
-                Go
-              </span>
+              Go
             </span>
-
-          </button>
-
-
-          {/* ======================================================
-              DESKTOP NAVIGATION
-          ====================================================== */}
-
-          <nav
-            className="
-              hidden
-              lg:flex
-              items-center
-              gap-0.5
-              font-sans
-            "
-          >
-
-            {navItems.map((item) => {
-
-              const isActive =
-                activePage === item.id;
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() =>
-                    setActivePage(item.id)
-                  }
-                  className={`
-                    relative
-                    px-3.5
-                    py-2
-                    rounded-md
-                    text-xs
-                    font-semibold
-                    transition-all
-                    duration-200
-
-                    ${isActive
-                      ? `
-                          text-white
-                          bg-white/[0.025]
-                        `
-                      : `
-                          text-axio-text-secondary
-                          hover:text-white
-                          hover:bg-axio-panel/50
-                        `
-                    }
-                  `}
-                >
-
-                  {item.label}
-
-                  {/* Active red indicator */}
-
-                  {isActive && (
-                    <span
-                      className="
-                        absolute
-                        bottom-0
-                        left-3
-                        right-3
-                        h-[2px]
-                        bg-axio-red
-                        rounded-full
-                        shadow-[0_0_8px_rgba(255,48,70,0.55)]
-                      "
-                    />
-                  )}
-
-                </button>
-              );
-            })}
-
-          </nav>
-
-        </div>
+          </span>
+        </button>
 
 
         {/* ========================================================
-            RIGHT SIDE
+            DESKTOP NAVIGATION
+        ======================================================== */}
+
+        <nav
+          className="
+            hidden
+            lg:flex
+            items-center
+            gap-0.5
+            font-sans
+            flex-1
+          "
+        >
+          {navItems.map((item) => {
+            const isActive = activePage === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={`
+                  relative
+                  px-3.5
+                  py-2
+                  rounded-md
+                  text-xs
+                  font-semibold
+                  transition-all
+                  duration-200
+
+                  ${isActive
+                    ? `
+                        text-white
+                        bg-white/[0.025]
+                      `
+                    : `
+                        text-axio-text-secondary
+                        hover:text-white
+                        hover:bg-white/[0.025]
+                      `
+                  }
+                `}
+              >
+                {item.label}
+
+                {isActive && (
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-3
+                      right-3
+                      h-[2px]
+                      bg-axio-red
+                      rounded-full
+                      shadow-[0_0_10px_rgba(255,48,70,0.65)]
+                    "
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+
+        {/* ========================================================
+            RIGHT SIDE CONTROLS
         ======================================================== */}
 
         <div
           className="
             flex
             items-center
-            gap-3
+            gap-2.5
             font-sans
             shrink-0
+            ml-auto
           "
         >
 
@@ -347,26 +232,50 @@ export const Header = ({
           <button
             onClick={onOpenNotifications}
             className="
+              group
               relative
-              p-2
-              bg-axio-card/70
-              hover:bg-axio-hover
+              w-10
+              h-10
+              flex
+              items-center
+              justify-center
+              rounded-xl
+              bg-white/[0.025]
+              hover:bg-axio-red/[0.07]
               border
-              border-axio-border
-              hover:border-axio-border-bright
+              border-white/[0.06]
+              hover:border-axio-red/20
               text-axio-text-secondary
               hover:text-white
-              rounded-md
               transition-all
-              duration-200
+              duration-300
             "
             title="Notifications"
+            aria-label="Notifications"
           >
+            <div
+              className="
+                absolute
+                inset-0
+                rounded-xl
+                bg-axio-red/10
+                blur-lg
+                opacity-0
+                group-hover:opacity-100
+                transition-opacity
+                duration-300
+                pointer-events-none
+              "
+            />
 
             <Bell
               className="
-                w-4
-                h-4
+                relative
+                w-[17px]
+                h-[17px]
+                transition-transform
+                duration-300
+                group-hover:scale-110
               "
             />
 
@@ -375,12 +284,13 @@ export const Header = ({
                 <span
                   className="
                     absolute
-                    top-1
-                    right-1
+                    top-2
+                    right-2
                     w-2
                     h-2
                     rounded-full
                     bg-axio-red
+                    opacity-70
                     animate-ping
                   "
                 />
@@ -388,17 +298,17 @@ export const Header = ({
                 <span
                   className="
                     absolute
-                    top-1
-                    right-1
+                    top-2
+                    right-2
                     w-2
                     h-2
                     rounded-full
                     bg-axio-red
+                    shadow-[0_0_8px_rgba(255,48,70,0.8)]
                   "
                 />
               </>
             )}
-
           </button>
 
 
@@ -410,22 +320,23 @@ export const Header = ({
 
             <button
               onClick={() =>
-                setIsRoleDropdownOpen(
-                  !isRoleDropdownOpen
-                )
+                setIsRoleDropdownOpen(!isRoleDropdownOpen)
               }
               className="
+                group
                 flex
                 items-center
-                gap-2
-                p-1.5
-                bg-axio-card/70
+                gap-2.5
+                h-10
+                px-2
+                rounded-xl
+                bg-white/[0.025]
+                hover:bg-white/[0.045]
                 border
-                border-axio-border
-                hover:border-axio-border-bright
-                rounded-md
+                border-white/[0.06]
+                hover:border-white/[0.10]
                 transition-all
-                duration-200
+                duration-300
               "
             >
 
@@ -433,22 +344,37 @@ export const Header = ({
 
               <div
                 className="
-                  w-7
-                  h-7
-                  rounded
-                  bg-axio-panel
+                  relative
+                  w-8
+                  h-8
+                  rounded-lg
+                  bg-[#10141A]
                   border
-                  border-axio-border
+                  border-white/[0.07]
                   flex
                   items-center
                   justify-center
                   font-display
-                  text-xs
+                  text-[11px]
                   font-bold
                   text-white
+                  overflow-hidden
                 "
               >
-                {currentUser.avatar}
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-br
+                    from-axio-red/15
+                    via-transparent
+                    to-transparent
+                  "
+                />
+
+                <span className="relative">
+                  {currentUser.avatar}
+                </span>
               </div>
 
 
@@ -463,13 +389,13 @@ export const Header = ({
                   font-sans
                 "
               >
-
                 <div
                   className="
                     text-white
-                    font-medium
+                    font-semibold
                     truncate
-                    max-w-[110px]
+                    max-w-[105px]
+                    leading-tight
                   "
                 >
                   {currentUser.name}
@@ -477,23 +403,31 @@ export const Header = ({
 
                 <div
                   className="
-                    text-[10px]
+                    text-[9px]
                     text-axio-muted
                     font-semibold
+                    uppercase
+                    tracking-wide
+                    mt-0.5
                   "
                 >
                   {currentRole}
                 </div>
-
               </div>
 
 
               <ChevronDown
-                className="
+                className={`
                   w-3.5
                   h-3.5
                   text-axio-muted
-                "
+                  transition-transform
+                  duration-300
+                  ${isRoleDropdownOpen
+                    ? 'rotate-180 text-white'
+                    : ''
+                  }
+                `}
               />
 
             </button>
@@ -508,41 +442,39 @@ export const Header = ({
                 className="
                   absolute
                   right-0
-                  mt-2
+                  mt-2.5
                   w-64
                   p-2
-                  bg-axio-panel
+                  bg-[#0B0F14]/95
+                  backdrop-blur-2xl
                   border
-                  border-axio-border
-                  rounded-lg
-                  shadow-2xl
+                  border-white/[0.07]
+                  rounded-xl
+                  shadow-[0_20px_60px_rgba(0,0,0,0.5)]
                   z-50
                   font-sans
                 "
               >
 
-                {/* Header */}
-
                 <div
                   className="
                     px-3
-                    py-2
-                    border-b
-                    border-axio-border
+                    py-2.5
                     mb-2
+                    border-b
+                    border-white/[0.05]
                   "
                 >
-
                   <p
                     className="
-                      text-xs
+                      text-[9px]
                       text-axio-muted
                       uppercase
-                      tracking-wider
+                      tracking-[0.16em]
                       font-semibold
                     "
                   >
-                    ENTERPRISE RBAC ROLE
+                    Enterprise RBAC Role
                   </p>
 
                   <p
@@ -550,80 +482,72 @@ export const Header = ({
                       text-xs
                       text-white
                       font-semibold
-                      mt-0.5
+                      mt-1
                     "
                   >
-                    Switch Role Context:
+                    Switch Role Context
                   </p>
-
                 </div>
 
 
                 {/* Roles */}
 
-                <div
-                  className="
-                    space-y-1
-                    mb-2
-                  "
-                >
+                <div className="space-y-1 mb-2">
 
-                  {Object.values(ROLES).map(
-                    (role) => (
+                  {Object.values(ROLES).map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        switchRole(role);
+                        setIsRoleDropdownOpen(false);
+                      }}
+                      className={`
+                        w-full
+                        flex
+                        items-center
+                        justify-between
+                        px-3
+                        py-2.5
+                        rounded-lg
+                        text-xs
+                        font-semibold
+                        transition-all
+                        duration-200
 
-                      <button
-                        key={role}
-                        onClick={() => {
-                          switchRole(role);
-                          setIsRoleDropdownOpen(false);
-                        }}
-                        className={`
-                          w-full
-                          flex
-                          items-center
-                          justify-between
-                          px-3
-                          py-2
-                          rounded
-                          text-xs
-                          font-semibold
-                          transition-colors
+                        ${currentRole === role
+                          ? `
+                              bg-axio-red/[0.08]
+                              text-white
+                              shadow-[inset_2px_0_0_#FF3046]
+                            `
+                          : `
+                              text-axio-text-secondary
+                              hover:text-white
+                              hover:bg-white/[0.035]
+                            `
+                        }
+                      `}
+                    >
 
-                          ${currentRole === role
-                            ? `
-                                bg-axio-red/10
-                                border
-                                border-axio-red/15
-                                text-white
-                              `
-                            : `
-                                hover:bg-axio-card
-                                text-axio-text-secondary
-                              `
-                          }
-                        `}
-                      >
+                      <RoleBadge
+                        role={role}
+                        compact
+                      />
 
-                        <RoleBadge
-                          role={role}
-                          compact
+                      {currentRole === role && (
+                        <span
+                          className="
+                            w-1.5
+                            h-1.5
+                            rounded-full
+                            bg-axio-red
+                            shadow-[0_0_7px_rgba(255,48,70,0.7)]
+                          "
                         />
+                      )}
 
-                        {currentRole === role && (
-                          <span
-                            className="
-                              w-1.5
-                              h-1.5
-                              rounded-full
-                              bg-axio-red
-                            "
-                          />
-                        )}
-
-                      </button>
-
-                    )
-                  )}
+                    </button>
+                  ))}
 
                 </div>
 
@@ -633,13 +557,11 @@ export const Header = ({
                 <div
                   className="
                     border-t
-                    border-axio-border
+                    border-white/[0.05]
                     pt-2
                     space-y-1
                   "
                 >
-
-                  {/* Settings */}
 
                   <button
                     onClick={() => {
@@ -650,33 +572,22 @@ export const Header = ({
                       w-full
                       flex
                       items-center
-                      gap-2
+                      gap-2.5
                       px-3
-                      py-1.5
-                      rounded
+                      py-2
+                      rounded-lg
                       text-xs
                       text-axio-text-secondary
                       hover:text-white
-                      hover:bg-axio-card
+                      hover:bg-white/[0.035]
                       font-medium
+                      transition-all
                     "
                   >
-
-                    <Settings
-                      className="
-                        w-3.5
-                        h-3.5
-                      "
-                    />
-
-                    <span>
-                      Settings & Preferences
-                    </span>
-
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Settings & Preferences</span>
                   </button>
 
-
-                  {/* Sign out */}
 
                   <button
                     onClick={() => {
@@ -687,28 +598,19 @@ export const Header = ({
                       w-full
                       flex
                       items-center
-                      gap-2
+                      gap-2.5
                       px-3
-                      py-1.5
-                      rounded
+                      py-2
+                      rounded-lg
                       text-xs
                       text-axio-red
-                      hover:bg-axio-red/10
+                      hover:bg-axio-red/[0.07]
                       font-medium
+                      transition-all
                     "
                   >
-
-                    <LogOut
-                      className="
-                        w-3.5
-                        h-3.5
-                      "
-                    />
-
-                    <span>
-                      Sign Out / Switch User
-                    </span>
-
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out / Switch User</span>
                   </button>
 
                 </div>
@@ -721,7 +623,6 @@ export const Header = ({
         </div>
 
       </div>
-
     </header>
   );
 };

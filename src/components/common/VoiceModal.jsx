@@ -1,166 +1,672 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, X, Sparkles, CheckCircle2, Bot } from 'lucide-react';
+import {
+  Mic,
+  Volume2,
+  X,
+  Sparkles,
+  CheckCircle2,
+  Bot
+} from 'lucide-react';
 import { simulateAxisWorkflow } from '../../services/axisService';
 
-export const VoiceModal = ({ isOpen, onClose, onAxisResponse }) => {
-  const [voiceState, setVoiceState] = useState('IDLE'); // IDLE, LISTENING, PROCESSING, SPEAKING
+export const VoiceModal = ({
+  isOpen,
+  onClose,
+  onAxisResponse
+}) => {
+  const [voiceState, setVoiceState] = useState('IDLE');
   const [transcript, setTranscript] = useState('');
   const [aiSpeechText, setAiSpeechText] = useState('');
+
   const canvasRef = useRef(null);
+
+  /* ============================================================
+     RESET MODAL STATE
+  ============================================================ */
 
   useEffect(() => {
     if (!isOpen) {
       setVoiceState('IDLE');
       setTranscript('');
       setAiSpeechText('');
-      return;
     }
   }, [isOpen]);
 
-  // Audio Waveform Animation
+  /* ============================================================
+     AUDIO WAVEFORM
+  ============================================================ */
+
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
     let animationId;
     let phase = 0;
 
     const renderWave = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
       const width = canvas.width;
       const height = canvas.height;
       const centerY = height / 2;
 
+      let amplitude = 5;
+
+      if (voiceState === 'LISTENING') {
+        amplitude = 24;
+      } else if (voiceState === 'PROCESSING') {
+        amplitude = 12;
+      } else if (voiceState === 'SPEAKING') {
+        amplitude = 19;
+      }
+
+      const frequency =
+        voiceState === 'PROCESSING'
+          ? 0.045
+          : 0.03;
+
+      /* --------------------------------------------------------
+         Primary waveform
+      -------------------------------------------------------- */
+
       ctx.beginPath();
       ctx.moveTo(0, centerY);
 
-      const amplitude = voiceState === 'LISTENING' ? 24 : (voiceState === 'SPEAKING' ? 18 : 6);
-      const frequency = 0.03;
-
       for (let x = 0; x < width; x++) {
-        const y = centerY + Math.sin(x * frequency + phase) * amplitude * Math.sin((x / width) * Math.PI);
+        const envelope =
+          Math.sin((x / width) * Math.PI);
+
+        const y =
+          centerY +
+          Math.sin(
+            x * frequency + phase
+          ) *
+          amplitude *
+          envelope;
+
         ctx.lineTo(x, y);
       }
 
-      ctx.strokeStyle = voiceState === 'LISTENING' ? '#20D6D2' : (voiceState === 'SPEAKING' ? '#FF3046' : '#7F8B98');
-      ctx.lineWidth = 2.5;
+      let primaryColor = '#7F8B98';
+
+      if (voiceState === 'LISTENING') {
+        primaryColor = '#FF3046';
+      }
+
+      if (voiceState === 'PROCESSING') {
+        primaryColor = '#FF3046';
+      }
+
+      if (voiceState === 'SPEAKING') {
+        primaryColor = '#FF3046';
+      }
+
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+
+      /* subtle red glow */
+
+      if (voiceState !== 'IDLE') {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor =
+          'rgba(255, 48, 70, 0.45)';
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
       ctx.stroke();
 
-      phase += voiceState === 'IDLE' ? 0.05 : 0.15;
-      animationId = requestAnimationFrame(renderWave);
+      ctx.shadowBlur = 0;
+
+      /* --------------------------------------------------------
+         Secondary subtle waveform
+      -------------------------------------------------------- */
+
+      if (voiceState !== 'IDLE') {
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
+
+        for (let x = 0; x < width; x++) {
+          const envelope =
+            Math.sin((x / width) * Math.PI);
+
+          const y =
+            centerY +
+            Math.cos(
+              x * frequency * 0.72 +
+              phase * 0.7
+            ) *
+            amplitude *
+            0.42 *
+            envelope;
+
+          ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle =
+          'rgba(255, 48, 70, 0.22)';
+
+        ctx.lineWidth = 1;
+
+        ctx.stroke();
+      }
+
+      phase +=
+        voiceState === 'IDLE'
+          ? 0.035
+          : voiceState === 'PROCESSING'
+            ? 0.09
+            : 0.15;
+
+      animationId =
+        requestAnimationFrame(renderWave);
     };
 
     renderWave();
-    return () => cancelAnimationFrame(animationId);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
   }, [isOpen, voiceState]);
 
+  /* ============================================================
+     MODAL
+  ============================================================ */
+
   if (!isOpen) return null;
+
+  /* ============================================================
+     START VOICE INTERACTION
+  ============================================================ */
 
   const handleStartListening = () => {
     setVoiceState('LISTENING');
     setTranscript('');
     setAiSpeechText('');
 
-    // Simulate speech-to-text input capture
     setTimeout(() => {
-      setTranscript('Why did maintenance costs increase in Vehicle Group A?');
+      setTranscript(
+        'Why did maintenance costs increase in Vehicle Group A?'
+      );
+
       setVoiceState('PROCESSING');
 
-      // Trigger AXIS workflow engine
-      simulateAxisWorkflow('Why did maintenance costs increase?', (step) => {}, (response) => {
-        setVoiceState('SPEAKING');
-        setAiSpeechText(response.headline + " " + response.summary);
-        if (onAxisResponse) {
-          onAxisResponse(response);
+      simulateAxisWorkflow(
+        'Why did maintenance costs increase?',
+        () => { },
+        (response) => {
+          setVoiceState('SPEAKING');
+
+          setAiSpeechText(
+            response.headline +
+            ' ' +
+            response.summary
+          );
+
+          if (onAxisResponse) {
+            onAxisResponse(response);
+          }
         }
-      });
+      );
     }, 2800);
   };
 
+  /* ============================================================
+     STATE LABEL
+  ============================================================ */
+
+  const stateLabel =
+    voiceState === 'IDLE'
+      ? 'PRESS MICROPHONE TO SPEAK'
+      : voiceState === 'LISTENING'
+        ? 'LISTENING · ENGLISH'
+        : voiceState === 'PROCESSING'
+          ? 'AXIS ORCHESTRATING AGENTS'
+          : 'AXIS SPEAKING RESPONSE';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg p-6 bg-axio-panel border border-axio-border rounded-lg shadow-2xl">
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-axio-muted hover:text-white rounded-md hover:bg-axio-card transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
 
-        <div className="flex items-center gap-2 mb-4">
-          <Bot className="w-5 h-5 text-axio-red" />
-          <h3 className="text-lg font-mono font-bold tracking-wide text-white">AXIS Voice AI Interface</h3>
-          <span className="ml-auto text-xs px-2 py-0.5 rounded bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono">
-            ENGLISH ONLY (V1)
-          </span>
+      {/* ========================================================
+          BACKDROP
+      ======================================================== */}
+
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+        onClick={onClose}
+      />
+
+      {/* Ambient red light */}
+
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[400px] bg-axio-red/[0.06] rounded-full blur-[150px] pointer-events-none" />
+
+      {/* ========================================================
+          MODAL
+      ======================================================== */}
+
+      <div
+        className="
+          relative
+          w-full
+          max-w-2xl
+          overflow-hidden
+          rounded-3xl
+          bg-axio-panel/90
+          backdrop-blur-2xl
+          shadow-[0_30px_100px_rgba(0,0,0,0.65)]
+          animate-voice-modal
+        "
+      >
+
+        {/* Top ambient glow */}
+
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[320px] h-px bg-gradient-to-r from-transparent via-axio-red/60 to-transparent" />
+
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[260px] h-[80px] bg-axio-red/[0.06] blur-[40px] pointer-events-none" />
+
+        {/* ====================================================
+            HEADER
+        ==================================================== */}
+
+        <div className="relative flex items-center justify-between px-6 sm:px-8 pt-6">
+
+          <div className="flex items-center gap-3">
+
+            <div className="relative">
+
+              <div
+                className={`
+                  absolute
+                  inset-0
+                  rounded-xl
+                  blur-xl
+                  transition-opacity
+                  duration-500
+                  ${voiceState !== 'IDLE'
+                    ? 'bg-axio-red/30 opacity-100'
+                    : 'bg-axio-red/10 opacity-70'
+                  }
+                `}
+              />
+
+              <div className="relative w-10 h-10 rounded-xl bg-axio-red/10 flex items-center justify-center">
+
+                <Bot className="w-5 h-5 text-axio-red" />
+
+              </div>
+
+            </div>
+
+            <div>
+
+              <div className="flex items-center gap-2">
+
+                <h2 className="font-display text-sm font-bold text-white tracking-wide">
+                  AXIS VOICE AI
+                </h2>
+
+                <span className="flex items-center gap-1 text-[8px] text-emerald-400 uppercase tracking-wider font-bold">
+
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+
+                  Online
+
+                </span>
+
+              </div>
+
+              <p className="text-[9px] text-axio-muted uppercase tracking-[0.16em] mt-1">
+                Natural language decision interface
+              </p>
+
+            </div>
+
+          </div>
+
+          <button
+            onClick={onClose}
+            className="
+              w-8
+              h-8
+              rounded-full
+              flex
+              items-center
+              justify-center
+              text-axio-muted
+              hover:text-white
+              hover:bg-white/[0.05]
+              transition-all
+            "
+            aria-label="Close voice interface"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
         </div>
 
-        <p className="text-xs text-axio-text-secondary mb-6">
-          Voice acts as a natural spoken interface directly to AXIS multi-agent intelligence.
-        </p>
+        {/* ====================================================
+            MAIN CONTENT
+        ==================================================== */}
 
-        {/* Audio Waveform Canvas Container */}
-        <div className="relative flex flex-col items-center justify-center p-6 bg-axio-bg border border-axio-border rounded-lg mb-6 overflow-hidden">
-          <canvas ref={canvasRef} width={400} height={80} className="w-full h-20" />
-          
-          <div className="mt-3 flex items-center gap-2 font-mono text-xs text-axio-muted">
-            <span className={`w-2 h-2 rounded-full ${
-              voiceState === 'LISTENING' ? 'bg-axio-cyan animate-ping' :
-              voiceState === 'PROCESSING' ? 'bg-axio-amber animate-pulse' :
-              voiceState === 'SPEAKING' ? 'bg-axio-red animate-pulse' : 'bg-axio-muted'
-            }`} />
-            <span className="uppercase font-semibold tracking-wider">
-              {voiceState === 'IDLE' && 'Press microphone to speak'}
-              {voiceState === 'LISTENING' && 'Listening (English)...'}
-              {voiceState === 'PROCESSING' && 'AXIS Orchestrating Agents...'}
-              {voiceState === 'SPEAKING' && 'AXIS Speaking Response...'}
+        <div className="relative px-6 sm:px-8 py-7">
+
+          <p className="text-xs sm:text-sm text-axio-text-secondary font-sans leading-relaxed max-w-xl mb-7">
+            Speak naturally to AXIS. Your request is interpreted,
+            routed through the intelligence layer, and returned as
+            a contextual enterprise response.
+          </p>
+
+          {/* ==================================================
+              VOICE VISUALIZER
+          ================================================== */}
+
+          <div className="relative overflow-hidden rounded-2xl bg-black/20">
+
+            {/* ambient center glow */}
+
+            <div
+              className={`
+                absolute
+                left-1/2
+                top-1/2
+                -translate-x-1/2
+                -translate-y-1/2
+                w-40
+                h-20
+                rounded-full
+                blur-[50px]
+                transition-all
+                duration-700
+                ${voiceState === 'IDLE'
+                  ? 'bg-axio-red/[0.03]'
+                  : 'bg-axio-red/[0.12]'
+                }
+              `}
+            />
+
+            <div className="relative px-4 sm:px-8 pt-7 pb-6">
+
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={100}
+                className="w-full h-24"
+              />
+
+              {/* State */}
+
+              <div className="flex items-center justify-center gap-2 mt-3">
+
+                <span
+                  className={`
+                    w-1.5
+                    h-1.5
+                    rounded-full
+                    ${voiceState === 'LISTENING'
+                      ? 'bg-axio-red animate-ping'
+                      : voiceState === 'PROCESSING'
+                        ? 'bg-axio-red animate-pulse'
+                        : voiceState === 'SPEAKING'
+                          ? 'bg-axio-red animate-pulse'
+                          : 'bg-axio-muted'
+                    }
+                  `}
+                />
+
+                <span className="text-[9px] font-semibold text-axio-muted uppercase tracking-[0.18em]">
+
+                  {stateLabel}
+
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ==================================================
+              TRANSCRIPT
+          ================================================== */}
+
+          {transcript && (
+            <div className="voice-content-enter mt-5">
+
+              <div className="flex items-center gap-2 mb-2">
+
+                <Mic className="w-3.5 h-3.5 text-axio-red" />
+
+                <span className="text-[9px] text-axio-red font-bold uppercase tracking-[0.15em]">
+                  SPOKEN INPUT
+                </span>
+
+              </div>
+
+              <div className="px-4 py-3 rounded-xl bg-white/[0.025]">
+
+                <p className="text-xs text-white font-medium font-sans leading-relaxed">
+                  "{transcript}"
+                </p>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              AXIS RESPONSE
+          ================================================== */}
+
+          {aiSpeechText && (
+            <div className="voice-content-enter mt-4">
+
+              <div className="flex items-center gap-2 mb-2">
+
+                <Volume2 className="w-3.5 h-3.5 text-axio-red" />
+
+                <span className="text-[9px] text-axio-red font-bold uppercase tracking-[0.15em]">
+                  AXIS SYNTHESIZED RESPONSE
+                </span>
+
+              </div>
+
+              <div className="relative overflow-hidden px-4 py-4 rounded-xl bg-axio-red/[0.05]">
+
+                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-axio-red/70" />
+
+                <p className="text-xs text-axio-text-sub leading-relaxed font-sans pl-2">
+                  {aiSpeechText}
+                </p>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              PROCESSING INDICATOR
+          ================================================== */}
+
+          {voiceState === 'PROCESSING' && (
+            <div className="flex items-center justify-center gap-2 mt-5">
+
+              <Sparkles className="w-3.5 h-3.5 text-axio-red animate-pulse" />
+
+              <span className="text-[9px] text-axio-muted uppercase tracking-[0.15em]">
+                Coordinating enterprise intelligence
+              </span>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              ACTIONS
+          ================================================== */}
+
+          <div className="flex items-center justify-center gap-3 mt-7">
+
+            {voiceState === 'IDLE' && (
+              <button
+                onClick={handleStartListening}
+                className="
+                  group
+                  relative
+                  flex
+                  items-center
+                  gap-2.5
+                  px-7
+                  py-3.5
+                  bg-axio-red
+                  hover:bg-red-500
+                  text-white
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-wider
+                  rounded-xl
+                  shadow-[0_10px_35px_rgba(255,48,70,0.18)]
+                  hover:shadow-[0_12px_45px_rgba(255,48,70,0.28)]
+                  transition-all
+                  duration-300
+                  hover:-translate-y-0.5
+                "
+              >
+
+                <Mic className="w-4 h-4" />
+
+                <span>
+                  Start Voice Query
+                </span>
+
+                <span className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              </button>
+            )}
+
+            {voiceState !== 'IDLE' && (
+              <button
+                onClick={() => setVoiceState('IDLE')}
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  px-6
+                  py-3
+                  rounded-xl
+                  bg-white/[0.035]
+                  text-axio-text-secondary
+                  hover:text-white
+                  text-[10px]
+                  font-semibold
+                  uppercase
+                  tracking-wider
+                  transition-all
+                  duration-300
+                "
+              >
+
+                <X className="w-3.5 h-3.5" />
+
+                <span>
+                  Stop Voice Interaction
+                </span>
+
+              </button>
+            )}
+
+          </div>
+
+          {/* ==================================================
+              FOOTER STATUS
+          ================================================== */}
+
+          <div className="flex items-center justify-center gap-2 mt-6">
+
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+
+            <span className="text-[8px] text-axio-muted uppercase tracking-wider">
+              Enterprise voice interface · AXIS controlled execution
             </span>
+
           </div>
+
         </div>
 
-        {/* Live Speech-to-Text & Output */}
-        {transcript && (
-          <div className="p-3 bg-axio-card border border-axio-border rounded-md mb-4 font-mono text-xs">
-            <div className="text-axio-muted mb-1 flex items-center gap-1.5">
-              <Mic className="w-3.5 h-3.5 text-axio-cyan" />
-              <span>SP SPOKEN TEXT:</span>
-            </div>
-            <p className="text-white font-medium">"{transcript}"</p>
-          </div>
-        )}
-
-        {aiSpeechText && (
-          <div className="p-3 bg-axio-red/10 border border-axio-red/15 rounded-md mb-6 font-mono text-xs">
-            <div className="text-axio-red mb-1 flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5" />
-              <span>AXIS SYNTHESIZED SPEECH:</span>
-            </div>
-            <p className="text-axio-text-sub leading-relaxed">{aiSpeechText}</p>
-          </div>
-        )}
-
-        {/* Action Controls */}
-        <div className="flex items-center justify-center gap-4">
-          {voiceState === 'IDLE' && (
-            <button
-              onClick={handleStartListening}
-              className="flex items-center gap-2 px-6 py-3 bg-axio-red hover:bg-red-600 text-white font-mono text-xs font-semibold rounded-md shadow-lg shadow-axio-red/20 transition-all transform hover:scale-105"
-            >
-              <Mic className="w-4 h-4" />
-              <span>START VOICE QUERY</span>
-            </button>
-          )}
-
-          {voiceState !== 'IDLE' && (
-            <button
-              onClick={() => setVoiceState('IDLE')}
-              className="px-5 py-2.5 bg-axio-card border border-axio-border hover:border-axio-border-bright text-axio-text-sub font-mono text-xs rounded-md transition-colors"
-            >
-              STOP VOICE INTERACTION
-            </button>
-          )}
-        </div>
       </div>
+
+      {/* ========================================================
+          ANIMATIONS
+      ======================================================== */}
+
+      <style>{`
+
+        @keyframes voiceModalIn {
+
+          from {
+            opacity: 0;
+            transform: translateY(22px) scale(0.97);
+            filter: blur(5px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
+
+        }
+
+        .animate-voice-modal {
+          animation:
+            voiceModalIn
+            500ms
+            cubic-bezier(0.22, 1, 0.36, 1)
+            both;
+        }
+
+        @keyframes voiceContentIn {
+
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+
+        }
+
+        .voice-content-enter {
+          animation:
+            voiceContentIn
+            450ms
+            cubic-bezier(0.22, 1, 0.36, 1)
+            both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+          .animate-voice-modal,
+          .voice-content-enter {
+            animation: none;
+          }
+
+        }
+
+      `}</style>
+
     </div>
   );
 };
