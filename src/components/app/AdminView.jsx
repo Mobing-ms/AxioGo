@@ -24,7 +24,7 @@ export const AdminView = () => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-axio-border">
         <div>
@@ -34,7 +34,7 @@ export const AdminView = () => {
             <RoleBadge role={currentRole} />
           </div>
           <p className="text-xs text-axio-text-secondary">
-            System monitoring, user RBAC management, Databricks ops, and AI copilot configuration.
+            Platform monitoring  |  User RBAC management  |  Databricks ops  |  AI copilot configuration
           </p>
         </div>
       </div>
@@ -45,9 +45,8 @@ export const AdminView = () => {
           <button
             key={tab}
             onClick={() => setActiveAdminTab(tab)}
-            className={`px-4 py-2 border-b-2 font-bold transition-all ${
-              activeAdminTab === tab ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
-            }`}
+            className={`px-4 py-2 border-b-2 font-bold transition-all ${activeAdminTab === tab ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
+              }`}
           >
             {tab}
           </button>
@@ -94,7 +93,7 @@ export const AdminView = () => {
                   <td className="p-4"><RoleBadge role={u.role} /></td>
                   <td className="p-4 text-axio-green">{u.status}</td>
                   <td className="p-4 text-right">
-                    <button 
+                    <button
                       onClick={() => switchRole(u.role)}
                       className="px-2.5 py-1 bg-axio-bg border border-axio-border hover:bg-axio-card text-axio-cyan rounded"
                     >
