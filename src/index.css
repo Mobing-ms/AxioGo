@@ -42,7 +42,6 @@
 
 ::-webkit-scrollbar-thumb {
   background: #202731;
-  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -113,17 +112,14 @@ select:focus-visible,
 /* Glass & Panel styling */
 .panel-dark {
   background: #090C11;
-  border: 1px solid #202731;
 }
 
 .card-dark {
   background: #0C1117;
-  border: 1px solid #202731;
   transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease, background-color 250ms ease;
 }
 
 .card-dark:hover {
-  border-color: #27323D;
   box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 48, 70, 0.06);
   transform: translateY(-2px);
 }
