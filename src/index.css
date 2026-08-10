@@ -9,7 +9,10 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: 'Outfit', sans-serif;
   }
 }
@@ -17,7 +20,7 @@
 /* Technical Background Grid Utility */
 .bg-tech-grid {
   background-size: 32px 32px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(32, 39, 49, 0.25) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(32, 39, 49, 0.25) 1px, transparent 1px);
 }
@@ -46,6 +49,50 @@
   background: #34404C;
 }
 
+/* Elegant focus treatment — replaces the browser's harsh rectangular outline
+   with a soft ambient ring, while keeping a visible state for keyboard users. */
+a,
+button,
+input,
+textarea,
+select,
+[tabindex] {
+  outline: none;
+}
+
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+  outline: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 48, 70, 0.28), 0 0 16px rgba(255, 48, 70, 0.18);
+  transition: box-shadow 200ms ease;
+}
+
+/* Respect reduced-motion preferences across custom keyframe animations */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Neon Glows */
 .glow-red {
   box-shadow: 0 0 25px rgba(255, 48, 70, 0.25);
@@ -72,8 +119,16 @@
 .card-dark {
   background: #0C1117;
   border: 1px solid #202731;
+  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease, background-color 250ms ease;
 }
 
 .card-dark:hover {
   border-color: #27323D;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 48, 70, 0.06);
+  transform: translateY(-2px);
+}
+
+.card-dark:active {
+  transform: translateY(-1px) scale(0.998);
+  background-color: #10161D;
 }
