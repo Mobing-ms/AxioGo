@@ -78,7 +78,7 @@ export const DataParticleCanvas = ({ className = '', particleCount = 45, interac
     let mouseActive = false;
     let smoothMouseX = 0;
     let smoothMouseY = 0;
-    const MAX_PARALLAX_PX = 14; // deliberately subtle
+    const MAX_PARALLAX_PX = 38; // visible, fluid follow — still restrained relative to canvas size
 
     const handleMouseMove = (e) => {
       const rect = parent.getBoundingClientRect();
@@ -121,8 +121,8 @@ export const DataParticleCanvas = ({ className = '', particleCount = 45, interac
       // Ease mouse influence toward its target for a smooth, non-jittery parallax feel
       const targetX = mouseActive ? rawMouseX : 0;
       const targetY = mouseActive ? rawMouseY : 0;
-      smoothMouseX += (targetX - smoothMouseX) * 0.04;
-      smoothMouseY += (targetY - smoothMouseY) * 0.04;
+      smoothMouseX += (targetX - smoothMouseX) * 0.065;
+      smoothMouseY += (targetY - smoothMouseY) * 0.065;
 
       // Draw particles & connection lines
       for (let i = 0; i < particles.length; i++) {
@@ -173,7 +173,7 @@ export const DataParticleCanvas = ({ className = '', particleCount = 45, interac
       }
 
       // Render floating subtle telemetry labels with sleek font
-      ctx.font = '10px "Space Grotesk", sans-serif';
+      ctx.font = '10px "Poppins", sans-serif';
       floatingLabels.forEach((label) => {
         if (!prefersReducedMotion) {
           label.y += label.vy;

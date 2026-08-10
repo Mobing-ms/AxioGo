@@ -90,7 +90,7 @@ export const VoiceModal = ({ isOpen, onClose, onAxisResponse }) => {
         <div className="flex items-center gap-2 mb-4">
           <Bot className="w-5 h-5 text-axio-red" />
           <h3 className="text-lg font-mono font-bold tracking-wide text-white">AXIS Voice AI Interface</h3>
-          <span className="ml-auto text-xs px-2 py-0.5 rounded bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan font-mono">
+          <span className="ml-auto text-xs px-2 py-0.5 rounded bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono">
             ENGLISH ONLY (V1)
           </span>
         </div>
@@ -130,7 +130,7 @@ export const VoiceModal = ({ isOpen, onClose, onAxisResponse }) => {
         )}
 
         {aiSpeechText && (
-          <div className="p-3 bg-axio-red/10 border border-axio-red/30 rounded-md mb-6 font-mono text-xs">
+          <div className="p-3 bg-axio-red/10 border border-axio-red/15 rounded-md mb-6 font-mono text-xs">
             <div className="text-axio-red mb-1 flex items-center gap-1.5">
               <Volume2 className="w-3.5 h-3.5" />
               <span>AXIS SYNTHESIZED SPEECH:</span>

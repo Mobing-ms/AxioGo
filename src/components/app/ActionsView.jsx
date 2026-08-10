@@ -37,7 +37,7 @@ export const ActionsView = () => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-axio-border">
         <div>
@@ -69,21 +69,19 @@ export const ActionsView = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {actionsList.map((act) => (
           <div key={act.id} className="p-6 bg-axio-panel border border-axio-border rounded-lg font-mono text-xs space-y-4">
-            
+
             <div className="flex items-center justify-between">
-              <span className={`px-2.5 py-0.5 rounded font-bold text-[10px] border ${
-                act.risk === 'HIGH' 
-                  ? 'bg-axio-red/10 border-axio-red/40 text-axio-red' 
-                  : 'bg-axio-cyan/10 border-axio-cyan/40 text-axio-cyan'
-              }`}>
+              <span className={`px-2.5 py-0.5 rounded font-bold text-[10px] ${act.risk === 'HIGH'
+                  ? 'bg-axio-red/12 text-axio-red'
+                  : 'bg-axio-cyan/12 text-axio-cyan'
+                }`}>
                 RISK: {act.risk}
               </span>
 
-              <span className={`text-[10px] px-2 py-0.5 rounded border ${
-                act.status === 'COMPLETED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                act.status === 'REJECTED' ? 'bg-axio-red/10 border-axio-red/30 text-axio-red' :
-                'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
-              }`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded ${act.status === 'COMPLETED' ? 'bg-emerald-500/12 text-emerald-400' :
+                  act.status === 'REJECTED' ? 'bg-axio-red/12 text-axio-red' :
+                    'bg-amber-500/12 text-amber-400 animate-pulse'
+                }`}>
                 STATUS: {act.status}
               </span>
             </div>
@@ -136,8 +134,8 @@ export const ActionsView = () => {
       {/* Human Approval Required Pause Modal */}
       {selectedActionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg p-6 bg-axio-panel border border-axio-red/50 rounded-lg shadow-2xl font-mono text-left">
-            
+          <div className="relative w-full max-w-lg p-6 bg-axio-panel border border-axio-red/20 rounded-lg shadow-2xl font-mono text-left">
+
             <button onClick={() => setSelectedActionModal(null)} className="absolute top-4 right-4 text-axio-muted hover:text-white">
               <X className="w-5 h-5" />
             </button>
@@ -148,7 +146,7 @@ export const ActionsView = () => {
             </div>
 
             <div className="space-y-4 text-xs font-sans mb-6">
-              <div className="p-3 bg-axio-red/10 border border-axio-red/30 rounded text-axio-text-sub font-mono">
+              <div className="p-3 bg-axio-red/10 border border-axio-red/15 rounded text-axio-text-sub font-mono">
                 <span className="text-white font-bold block">{selectedActionModal.title}</span>
                 <span>Target: {selectedActionModal.targetSystem}</span>
               </div>

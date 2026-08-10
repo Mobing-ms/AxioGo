@@ -4,10 +4,10 @@ import { Bot, Server, ShieldCheck, Cpu, Database, CheckCircle2, ArrowRight } fro
 export const AboutView = ({ setActivePage }) => {
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto font-mono text-left">
-      
+
       {/* Title */}
       <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/30 text-axio-red text-xs font-bold mb-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/15 text-axio-red text-xs font-bold mb-3">
           <Bot className="w-4 h-4" />
           <span>ABOUT AXIOGO</span>
         </div>
@@ -22,7 +22,7 @@ export const AboutView = ({ setActivePage }) => {
       {/* Core Loop Box */}
       <div className="p-8 bg-axio-panel border border-axio-border rounded-xl mb-12 shadow-2xl space-y-4">
         <h2 className="text-sm font-bold text-white uppercase tracking-wider text-center">THE AXIOGO CENTRAL PRODUCT LOOP</h2>
-        
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-axio-text-sub font-bold text-center">
           <div className="p-3 bg-axio-bg border border-axio-border rounded w-full">TRUSTED DATA</div>
           <span>↓</span>

@@ -10,7 +10,7 @@ export const NotificationsDrawer = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-axio-panel border-l border-axio-border h-full p-6 shadow-2xl overflow-y-auto font-mono text-left">
-        
+
         <div className="flex items-center justify-between pb-4 border-b border-axio-border mb-6">
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-axio-red" />
@@ -28,7 +28,7 @@ export const NotificationsDrawer = ({ isOpen, onClose }) => {
         ) : (
           <div className="space-y-4">
             <div className="flex justify-end mb-2">
-              <button 
+              <button
                 onClick={clearNotifications}
                 className="text-[10px] text-axio-muted hover:text-white"
               >
@@ -37,14 +37,13 @@ export const NotificationsDrawer = ({ isOpen, onClose }) => {
             </div>
 
             {notifications.map((n) => (
-              <div 
-                key={n.id} 
+              <div
+                key={n.id}
                 onClick={() => markNotificationRead(n.id)}
-                className={`p-4 rounded-lg border text-xs cursor-pointer transition-all ${
-                  n.read 
-                    ? 'bg-axio-bg/50 border-axio-border opacity-70' 
-                    : 'bg-axio-card border-axio-red/40 shadow-lg'
-                }`}
+                className={`p-4 rounded-lg border text-xs cursor-pointer transition-all ${n.read
+                    ? 'bg-axio-bg/50 border-axio-border opacity-70'
+                    : 'bg-axio-card border-axio-red/18 shadow-lg'
+                  }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-white">{n.title}</span>

@@ -16,7 +16,7 @@ export const WorkspaceView = ({ setActivePage, onOpenUploadModal, onOpenVoiceMod
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-axio-border">
         <div className="flex items-center gap-3">
@@ -37,9 +37,8 @@ export const WorkspaceView = ({ setActivePage, onOpenUploadModal, onOpenVoiceMod
           <button
             key={tab}
             onClick={() => setWorkspaceTab(tab)}
-            className={`px-4 py-2 border-b-2 font-bold transition-all whitespace-nowrap ${
-              workspaceTab === tab ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
-            }`}
+            className={`px-4 py-2 border-b-2 font-bold transition-all whitespace-nowrap ${workspaceTab === tab ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
+              }`}
           >
             {tab}
           </button>

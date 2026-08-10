@@ -72,8 +72,8 @@ export const Header = ({ activePage, setActivePage, onOpenNotifications }) => {
                   onClick={() => setActivePage(item.id)}
                   className={`relative px-3.5 py-1.5 rounded text-xs font-semibold transition-all ${
                     isActive 
-                      ? 'text-white bg-axio-card border border-axio-border-bright' 
-                      : 'text-axio-text-secondary hover:text-white hover:bg-axio-panel'
+                      ? 'text-white' 
+                      : 'text-axio-text-secondary hover:text-white hover:bg-axio-panel/60'
                   }`}
                 >
                   {item.label}
@@ -135,7 +135,7 @@ export const Header = ({ activePage, setActivePage, onOpenNotifications }) => {
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs font-semibold transition-colors ${
                         currentRole === role 
-                          ? 'bg-axio-red/10 border border-axio-red/30 text-white' 
+                          ? 'bg-axio-red/10 border border-axio-red/15 text-white' 
                           : 'hover:bg-axio-card text-axio-text-secondary'
                       }`}
                     >

@@ -3,16 +3,16 @@ import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { RoleBadge } from '../common/RoleBadge';
 import { FLEET_KPIS, TELEMETRY_ACTIVITY_DATA, AI_INSIGHT_CARDS } from '../../services/analyticsService';
-import { 
-  Truck, 
-  Users, 
-  Wrench, 
-  ShieldAlert, 
-  Bot, 
-  ArrowRight, 
-  RefreshCw, 
-  Activity, 
-  CheckCircle2, 
+import {
+  Truck,
+  Users,
+  Wrench,
+  ShieldAlert,
+  Bot,
+  ArrowRight,
+  RefreshCw,
+  Activity,
+  CheckCircle2,
   AlertTriangle,
   Layers,
   Sparkles
@@ -32,7 +32,7 @@ export const DashboardView = ({ setActivePage }) => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Command Center Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-axio-border">
         <div>
@@ -50,7 +50,7 @@ export const DashboardView = ({ setActivePage }) => {
 
         {/* Global Filter Bar */}
         <div className="flex flex-wrap items-center gap-2">
-          <select 
+          <select
             value={activeFilters.dateRange}
             onChange={(e) => setActiveFilters(prev => ({ ...prev, dateRange: e.target.value }))}
             className="bg-axio-panel border border-axio-border rounded px-3 py-1.5 text-xs text-white focus:outline-none"
@@ -61,7 +61,7 @@ export const DashboardView = ({ setActivePage }) => {
             <option>Q3 YTD</option>
           </select>
 
-          <select 
+          <select
             value={activeFilters.vehicleGroup}
             onChange={(e) => setActiveFilters(prev => ({ ...prev, vehicleGroup: e.target.value }))}
             className="bg-axio-panel border border-axio-border rounded px-3 py-1.5 text-xs text-white focus:outline-none"
@@ -72,7 +72,7 @@ export const DashboardView = ({ setActivePage }) => {
             <option>Vehicle Group C (Last-Mile Delivery)</option>
           </select>
 
-          <button 
+          <button
             onClick={() => setActivePage('axis')}
             className="flex items-center gap-1.5 px-4 py-1.5 bg-axio-red hover:bg-red-600 text-white rounded font-bold text-xs transition-colors shadow-md shadow-axio-red/20"
           >
@@ -92,7 +92,7 @@ export const DashboardView = ({ setActivePage }) => {
                 <span className="text-[10px] text-axio-muted uppercase tracking-wider font-semibold">
                   {kpi.title}
                 </span>
-                <div className="p-2 rounded bg-axio-card border border-axio-border text-axio-cyan group-hover:border-axio-cyan/40 transition-colors">
+                <div className="p-2 rounded bg-axio-card border border-axio-border text-axio-cyan group-hover:border-axio-cyan/18 transition-colors">
                   <IconComp className="w-4 h-4" />
                 </div>
               </div>
@@ -112,7 +112,7 @@ export const DashboardView = ({ setActivePage }) => {
 
       {/* Main Telemetry Chart & Side Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-        
+
         {/* Main Chart Column */}
         <div className="lg:col-span-8 p-6 bg-axio-panel border border-axio-border rounded-lg">
           <div className="flex items-center justify-between mb-4">
@@ -123,7 +123,7 @@ export const DashboardView = ({ setActivePage }) => {
               </h2>
               <p className="text-[11px] text-axio-muted">Real-time IoT stream aggregated via Databricks Gold Layer</p>
             </div>
-            <button 
+            <button
               onClick={() => setActivePage('analytics')}
               className="text-xs text-axio-cyan hover:underline flex items-center gap-1"
             >
@@ -138,8 +138,8 @@ export const DashboardView = ({ setActivePage }) => {
               <AreaChart data={TELEMETRY_ACTIVITY_DATA}>
                 <defs>
                   <linearGradient id="gradUnits" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#20D6D2" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#20D6D2" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#20D6D2" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#20D6D2" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#202731" />
@@ -193,7 +193,7 @@ export const DashboardView = ({ setActivePage }) => {
 
           <button
             onClick={() => setActivePage('axis')}
-            className="w-full mt-4 py-2.5 bg-axio-card hover:bg-axio-hover border border-axio-red/40 hover:border-axio-red text-white text-xs font-bold rounded flex items-center justify-center gap-2 transition-all"
+            className="w-full mt-4 py-2.5 bg-axio-card hover:bg-axio-hover border border-axio-red/18 hover:border-axio-red text-white text-xs font-bold rounded flex items-center justify-center gap-2 transition-all"
           >
             <Bot className="w-4 h-4 text-axio-red" />
             <span>ANALYZE WITH AXIS</span>
@@ -216,11 +216,10 @@ export const DashboardView = ({ setActivePage }) => {
           {AI_INSIGHT_CARDS.map((ins) => (
             <div key={ins.id} className="p-5 bg-axio-panel border border-axio-border rounded-lg text-left">
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
-                  ins.severity === 'HIGH' ? 'bg-axio-red/10 border-axio-red/30 text-axio-red' :
-                  ins.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
-                  'bg-axio-green/10 border-axio-green/30 text-axio-green'
-                }`}>
+                <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${ins.severity === 'HIGH' ? 'bg-axio-red/10 border-axio-red/15 text-axio-red' :
+                    ins.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/15 text-amber-400' :
+                      'bg-axio-green/10 border-axio-green/15 text-axio-green'
+                  }`}>
                   {ins.severity} PRIORITY
                 </span>
                 <span className="text-[10px] text-axio-muted">{ins.domain}</span>
@@ -228,7 +227,7 @@ export const DashboardView = ({ setActivePage }) => {
 
               <h4 className="font-bold text-xs text-white mb-2 font-sans">{ins.title}</h4>
               <p className="text-[11px] text-axio-text-secondary leading-relaxed mb-3 font-sans">{ins.description}</p>
-              
+
               <div className="pt-3 border-t border-axio-border flex items-center justify-between text-[10px]">
                 <span className="text-axio-muted truncate max-w-[180px]">{ins.suggestedAction}</span>
                 <button onClick={() => setActivePage('axis')} className="text-axio-cyan font-bold hover:underline">

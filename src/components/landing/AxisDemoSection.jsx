@@ -33,10 +33,10 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/30 text-axio-red font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/15 text-axio-red font-mono text-xs font-semibold mb-4">
             <Bot className="w-3.5 h-3.5" />
             <span>03. AXIS CENTRAL INTELLIGENCE</span>
           </div>
@@ -56,11 +56,10 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
               key={q.question}
               onClick={() => handleQueryClick(q.question)}
               disabled={isProcessing}
-              className={`px-3.5 py-2 rounded-lg border transition-all ${
-                selectedQuery === q.question
+              className={`px-3.5 py-2 rounded-lg border transition-all ${selectedQuery === q.question
                   ? 'bg-axio-red text-white border-axio-red shadow-lg shadow-axio-red/20 font-bold'
                   : 'bg-axio-panel hover:bg-axio-card text-axio-text-sub border-axio-border hover:border-axio-border-bright'
-              }`}
+                }`}
             >
               "{q.question}"
             </button>
@@ -69,7 +68,7 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
 
         {/* Simulated AXIS Interactive Workspace Box */}
         <div className="max-w-4xl mx-auto bg-axio-panel border border-axio-border rounded-xl shadow-2xl overflow-hidden font-mono text-left">
-          
+
           {/* Header Bar */}
           <div className="px-6 py-4 bg-axio-card border-b border-axio-border flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -84,7 +83,7 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
 
           {/* Chat Body */}
           <div className="p-6 space-y-6">
-            
+
             {/* User Question Bubble */}
             <div className="flex items-start gap-3">
               <div className="w-7 h-7 rounded bg-axio-card border border-axio-border flex items-center justify-center font-bold text-xs text-white">
@@ -119,12 +118,12 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
             {/* AXIS Response Block */}
             {!isProcessing && activeResponse && (
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded bg-axio-red/20 border border-axio-red/40 flex items-center justify-center text-axio-red font-bold text-xs">
+                <div className="w-7 h-7 rounded bg-axio-red/20 border border-axio-red/18 flex items-center justify-center text-axio-red font-bold text-xs">
                   AXIS
                 </div>
 
                 <div className="flex-1 p-5 bg-axio-bg border border-axio-border rounded-lg space-y-4">
-                  
+
                   {/* Headline & Summary */}
                   <div>
                     <h4 className="text-sm sm:text-base font-bold text-white mb-1 font-sans">
@@ -147,8 +146,8 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
                           <AreaChart data={activeResponse.chartData}>
                             <defs>
                               <linearGradient id="gradGroupA" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#FF3046" stopOpacity={0.4}/>
-                                <stop offset="95%" stopColor="#FF3046" stopOpacity={0}/>
+                                <stop offset="5%" stopColor="#FF3046" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="#FF3046" stopOpacity={0} />
                               </linearGradient>
                             </defs>
                             <XAxis dataKey="period" stroke="#7F8B98" fontSize={10} />
@@ -180,7 +179,7 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
 
                   {/* Action CTAs */}
                   <div className="flex flex-wrap items-center gap-3 pt-2">
-                    <button 
+                    <button
                       onClick={onOpenFullAxis}
                       className="flex items-center gap-1.5 px-4 py-2 bg-axio-red hover:bg-red-600 text-white font-mono text-xs font-semibold rounded shadow-md transition-all"
                     >
@@ -189,9 +188,9 @@ export const AxisDemoSection = ({ onOpenFullAxis }) => {
                     </button>
 
                     {activeResponse.actionAvailable && (
-                      <button 
+                      <button
                         onClick={onOpenFullAxis}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan hover:bg-axio-cyan/20 font-mono text-xs font-semibold rounded transition-all"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan hover:bg-axio-cyan/20 font-mono text-xs font-semibold rounded transition-all"
                       >
                         <Zap className="w-3.5 h-3.5" />
                         <span>{activeResponse.actionAvailable.title}</span>

@@ -3,10 +3,10 @@ import { Truck, Activity, Wrench, Fuel, ShieldAlert, AlertTriangle, Users, Layer
 
 export const AutomotiveDomains = () => {
   const domains = [
-    { name: 'VEHICLES', desc: 'Master registry & VIN asset indices', icon: Truck, color: 'text-axio-cyan border-axio-cyan/30' },
-    { name: 'TELEMETRY', desc: 'IoT streaming metrics & fault codes', icon: Activity, color: 'text-axio-red border-axio-red/30' },
-    { name: 'MAINTENANCE', desc: 'Shop work orders & part costs', icon: Wrench, color: 'text-amber-400 border-amber-400/30' },
-    { name: 'FUEL', desc: 'Energy usage & idle waste logs', icon: Fuel, color: 'text-emerald-400 border-emerald-400/30' },
+    { name: 'VEHICLES', desc: 'Master registry & VIN asset indices', icon: Truck, color: 'text-axio-cyan border-axio-cyan/15' },
+    { name: 'TELEMETRY', desc: 'IoT streaming metrics & fault codes', icon: Activity, color: 'text-axio-red border-axio-red/15' },
+    { name: 'MAINTENANCE', desc: 'Shop work orders & part costs', icon: Wrench, color: 'text-amber-400 border-amber-400/15' },
+    { name: 'FUEL', desc: 'Energy usage & idle waste logs', icon: Fuel, color: 'text-emerald-400 border-emerald-400/15' },
     { name: 'CLAIMS', desc: 'Insurance settlements & litigation', icon: ShieldAlert, color: 'text-blue-400 border-blue-400/30' },
     { name: 'ACCIDENTS', desc: 'Crash telematics & severity scores', icon: AlertTriangle, color: 'text-rose-500 border-rose-500/30' },
     { name: 'DRIVERS', desc: 'Safety scores & HOS compliance', icon: Users, color: 'text-purple-400 border-purple-400/30' },
@@ -16,10 +16,10 @@ export const AutomotiveDomains = () => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono text-xs font-semibold mb-4">
             <Layers className="w-3.5 h-3.5" />
             <span>06. AUTOMOTIVE DATA DOMAINS</span>
           </div>

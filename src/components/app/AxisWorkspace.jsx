@@ -3,17 +3,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { RoleBadge } from '../common/RoleBadge';
 import { PREBUILT_QUERIES, simulateAxisWorkflow } from '../../services/axisService';
-import { 
-  Bot, 
-  Send, 
-  Mic, 
-  Sparkles, 
-  CheckCircle2, 
-  RefreshCw, 
-  Database, 
-  FileText, 
-  Zap, 
-  Layers, 
+import {
+  Bot,
+  Send,
+  Mic,
+  Sparkles,
+  CheckCircle2,
+  RefreshCw,
+  Database,
+  FileText,
+  Zap,
+  Layers,
   ShieldCheck,
   BarChart2
 } from 'lucide-react';
@@ -78,7 +78,7 @@ export const AxisWorkspace = ({ onOpenVoiceModal, onOpenReports, onOpenActions }
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Workspace Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-axio-border">
         <div className="flex items-center gap-2">
@@ -93,25 +93,24 @@ export const AxisWorkspace = ({ onOpenVoiceModal, onOpenReports, onOpenActions }
 
       {/* Main Workspace Layout (Chat Left, Context Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* Left Column: Chat Conversation */}
         <div className="lg:col-span-8 bg-axio-panel border border-axio-border rounded-lg flex flex-col h-[70vh] shadow-2xl overflow-hidden">
-          
+
           {/* Conversation Stream */}
           <div className="flex-1 p-6 overflow-y-auto space-y-6">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex items-start gap-3 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}>
                 {msg.sender === 'AXIS' && (
-                  <div className="w-8 h-8 rounded bg-axio-red/20 border border-axio-red/40 flex items-center justify-center text-axio-red font-bold text-xs shrink-0">
+                  <div className="w-8 h-8 rounded bg-axio-red/20 border border-axio-red/18 flex items-center justify-center text-axio-red font-bold text-xs shrink-0">
                     AXIS
                   </div>
                 )}
 
-                <div className={`p-4 rounded-lg text-xs max-w-2xl font-sans ${
-                  msg.sender === 'USER' 
-                    ? 'bg-axio-card border border-axio-border text-white' 
+                <div className={`p-4 rounded-lg text-xs max-w-2xl font-sans ${msg.sender === 'USER'
+                    ? 'bg-axio-card border border-axio-border text-white'
                     : 'bg-axio-bg border border-axio-border text-axio-text-sub'
-                }`}>
+                  }`}>
                   <div className="font-mono text-[10px] text-axio-muted mb-1 flex items-center justify-between gap-4">
                     <span>{msg.sender}</span>
                     <span>{msg.timestamp}</span>
@@ -156,9 +155,9 @@ export const AxisWorkspace = ({ onOpenVoiceModal, onOpenReports, onOpenActions }
                   {msg.actionAvailable && (
                     <div className="mt-3 pt-3 border-t border-axio-border flex items-center justify-between">
                       <span className="text-[10px] font-mono text-axio-muted">ACTION AVAILABLE: {msg.actionAvailable.title}</span>
-                      <button 
+                      <button
                         onClick={onOpenActions}
-                        className="px-3 py-1 bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan font-mono text-[10px] font-bold rounded"
+                        className="px-3 py-1 bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono text-[10px] font-bold rounded"
                       >
                         EXECUTE ACTION
                       </button>
@@ -223,7 +222,7 @@ export const AxisWorkspace = ({ onOpenVoiceModal, onOpenReports, onOpenActions }
 
         {/* Right Column: Active Context Side Panel */}
         <div className="lg:col-span-4 p-6 bg-axio-panel border border-axio-border rounded-lg space-y-6">
-          
+
           <div>
             <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
               <Database className="w-4 h-4 text-axio-cyan" />

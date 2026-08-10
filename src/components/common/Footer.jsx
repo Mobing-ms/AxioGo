@@ -16,7 +16,7 @@ export const Footer = ({ setActivePage }) => {
             <p className="text-axio-muted text-[11px] leading-relaxed mb-4">
               Enterprise AI Decision Intelligence System for automotive & fleet data. Sits above existing Databricks Lakehouse infrastructure.
             </p>
-            <div className="flex items-center gap-2 text-[10px] text-axio-cyan bg-axio-cyan/10 border border-axio-cyan/30 px-2.5 py-1 rounded w-fit">
+            <div className="flex items-center gap-2 text-[10px] text-axio-cyan bg-axio-cyan/10 border border-axio-cyan/15 px-2.5 py-1 rounded w-fit">
               <CheckCircle2 className="w-3 h-3" />
               <span>DATABRICKS LAKEHOUSE SYNCED</span>
             </div>

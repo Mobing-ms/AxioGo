@@ -13,10 +13,10 @@ export const BusinessContextSection = () => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/30 text-axio-red font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/15 text-axio-red font-mono text-xs font-semibold mb-4">
             <BookOpen className="w-3.5 h-3.5" />
             <span>02. BUSINESS CONTEXT & RAG LAYER</span>
           </div>
@@ -31,7 +31,7 @@ export const BusinessContextSection = () => {
 
         {/* Column Name vs Business Definition Comparison */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          
+
           {/* Traditional Raw Column View */}
           <div className="p-6 bg-axio-panel border border-axio-border rounded-xl font-mono text-left opacity-60 hover:opacity-100 transition-opacity">
             <div className="text-xs text-axio-muted mb-2 font-bold uppercase tracking-wider">TRADITIONAL SQL BI INTERACTION</div>
@@ -44,12 +44,12 @@ export const BusinessContextSection = () => {
           </div>
 
           {/* AxioGo Business Context Layer */}
-          <div className="p-6 bg-axio-card border border-axio-red/40 rounded-xl font-mono text-left shadow-xl shadow-axio-red/5">
+          <div className="p-6 bg-axio-card border border-axio-red/18 rounded-xl font-mono text-left shadow-xl shadow-axio-red/5">
             <div className="text-xs text-axio-red mb-2 font-bold uppercase tracking-wider flex items-center gap-1.5">
               <Check className="w-4 h-4 text-axio-red" />
               <span>AXIOGO CONTEXTUALIZED REASONING</span>
             </div>
-            <div className="p-3 bg-axio-red/10 border border-axio-red/30 rounded text-white text-xs mb-4 font-semibold">
+            <div className="p-3 bg-axio-red/10 border border-axio-red/15 rounded text-white text-xs mb-4 font-semibold">
               "Why did maintenance costs increase in Vehicle Group A?"
             </div>
             <p className="text-xs text-axio-text-sub leading-relaxed">
@@ -67,7 +67,7 @@ export const BusinessContextSection = () => {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Structured Box */}
             <div className="p-4 bg-axio-bg border border-axio-border rounded-lg">
               <div className="text-xs font-bold text-axio-cyan mb-2">STRUCTURED ENTERPRISE DATA</div>

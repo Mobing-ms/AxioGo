@@ -15,7 +15,7 @@ export const AuditLogsView = () => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-axio-border">
         <div>
@@ -36,11 +36,10 @@ export const AuditLogsView = () => {
             <button
               key={sev}
               onClick={() => setSeverityFilter(sev)}
-              className={`px-3 py-1 rounded border transition-colors ${
-                severityFilter === sev
+              className={`px-3 py-1 rounded border transition-colors ${severityFilter === sev
                   ? 'bg-axio-red text-white border-axio-red font-bold'
                   : 'bg-axio-panel text-axio-text-sub border-axio-border hover:border-axio-border-bright'
-              }`}
+                }`}
             >
               {sev}
             </button>
@@ -65,9 +64,8 @@ export const AuditLogsView = () => {
             </thead>
             <tbody className="divide-y divide-axio-border text-axio-text-sub">
               {filteredLogs.map((log) => (
-                <tr key={log.id} className={`hover:bg-axio-card/60 transition-colors ${
-                  log.severity === 'CRITICAL' ? 'bg-axio-red/5' : ''
-                }`}>
+                <tr key={log.id} className={`hover:bg-axio-card/60 transition-colors ${log.severity === 'CRITICAL' ? 'bg-axio-red/5' : ''
+                  }`}>
                   <td className="p-4 text-axio-muted font-mono">{log.timestamp}</td>
                   <td className="p-4 font-bold text-white">{log.user}</td>
                   <td className="p-4"><RoleBadge role={log.role} compact /></td>
@@ -75,10 +73,9 @@ export const AuditLogsView = () => {
                   <td className="p-4 text-axio-text-secondary">{log.resource}</td>
                   <td className="p-4 font-sans text-axio-text-sub max-w-xs">{log.action}</td>
                   <td className="p-4 text-right font-bold">
-                    <span className={`px-2 py-0.5 rounded text-[10px] border ${
-                      log.status === 'SUCCESS' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                      'bg-axio-red/10 border-axio-red/30 text-axio-red'
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] border ${log.status === 'SUCCESS' ? 'bg-emerald-500/10 border-emerald-500/15 text-emerald-400' :
+                        'bg-axio-red/10 border-axio-red/15 text-axio-red'
+                      }`}>
                       {log.status}
                     </span>
                   </td>

@@ -46,10 +46,10 @@ export const DecisionStorySection = ({ onOpenActions }) => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/30 text-axio-red font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-red/10 border border-axio-red/15 text-axio-red font-mono text-xs font-semibold mb-4">
             <Zap className="w-3.5 h-3.5" />
             <span>05. DECISION INTELLIGENCE PROGRESSION</span>
           </div>
@@ -71,11 +71,10 @@ export const DecisionStorySection = ({ onOpenActions }) => {
               <div
                 key={stage.num}
                 onClick={() => setActiveStep(idx)}
-                className={`p-6 rounded-xl border font-mono text-left cursor-pointer transition-all duration-300 ${
-                  isActive 
-                    ? 'bg-axio-card border-axio-red shadow-2xl scale-105 z-10' 
+                className={`p-6 rounded-xl border font-mono text-left cursor-pointer transition-all duration-300 ${isActive
+                    ? 'bg-axio-card border-axio-red shadow-2xl scale-105 z-10'
                     : 'bg-axio-panel border-axio-border hover:border-axio-border-bright opacity-80 hover:opacity-100'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-bold text-axio-muted">{stage.num}</span>
@@ -103,7 +102,7 @@ export const DecisionStorySection = ({ onOpenActions }) => {
         </div>
 
         {/* Action Trigger Banner */}
-        <div className="p-6 bg-axio-panel border border-axio-red/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
+        <div className="p-6 bg-axio-panel border border-axio-red/15 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
           <div className="flex items-center gap-3 text-left">
             <div className="w-10 h-10 rounded bg-axio-red/20 border border-axio-red flex items-center justify-center text-axio-red font-bold">
               <Zap className="w-5 h-5" />

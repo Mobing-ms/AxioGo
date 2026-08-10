@@ -28,7 +28,7 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
     setTimeout(() => {
       setPipelineProgress(35);
       setPipelineStatusText('Intake / Bronze raw table created...');
-      
+
       setTimeout(() => {
         setPipelineProgress(70);
         setPipelineStatusText('Forge / Silver Delta standardization & schema validation...');
@@ -49,8 +49,8 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
       <div className="relative w-full max-w-2xl p-6 bg-axio-panel border border-axio-border rounded-lg shadow-2xl font-mono text-left">
-        
-        <button 
+
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 text-axio-muted hover:text-white rounded hover:bg-axio-card"
         >
@@ -79,11 +79,11 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
 
         {/* SELECT STEP */}
         {step === 'SELECT' && (
-          <div className="p-8 border-2 border-dashed border-axio-border hover:border-axio-cyan/50 rounded-lg text-center bg-axio-bg/50 transition-colors">
+          <div className="p-8 border-2 border-dashed border-axio-border hover:border-axio-cyan/20 rounded-lg text-center bg-axio-bg/50 transition-colors">
             <Upload className="w-10 h-10 text-axio-cyan mx-auto mb-3" />
             <p className="text-xs text-white font-bold mb-1">Drag & drop enterprise file here</p>
             <p className="text-[10px] text-axio-muted mb-4">Supports CSV, JSON, Parquet, and Excel (.xlsx)</p>
-            
+
             <label className="px-5 py-2.5 bg-axio-red hover:bg-red-600 text-white font-bold text-xs rounded cursor-pointer transition-colors inline-block">
               BROWSE FILE
               <input type="file" onChange={handleFileChange} accept=".csv,.json,.parquet,.xlsx" className="hidden" />
@@ -95,7 +95,7 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
         {step === 'VALIDATE' && validationResult && (
           <div className="space-y-4 text-xs">
             {validationResult.valid ? (
-              <div className="p-4 bg-axio-green/10 border border-axio-green/30 rounded flex items-start gap-3">
+              <div className="p-4 bg-axio-green/10 border border-axio-green/15 rounded flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-axio-green shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-axio-green">VALIDATION SUCCESSFUL</div>
@@ -103,7 +103,7 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
                 </div>
               </div>
             ) : (
-              <div className="p-4 bg-axio-red/10 border border-axio-red/30 rounded flex items-start gap-3">
+              <div className="p-4 bg-axio-red/10 border border-axio-red/15 rounded flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-axio-red shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-axio-red">VALIDATION ERROR</div>
@@ -174,14 +174,14 @@ export const DatasetUploadModal = ({ isOpen, onClose, onViewDataset, onAskAxis }
             </div>
 
             <div className="flex items-center justify-center gap-4 pt-4">
-              <button 
+              <button
                 onClick={() => { onClose(); if (onViewDataset) onViewDataset(); }}
                 className="px-5 py-2.5 bg-axio-panel border border-axio-border hover:border-axio-border-bright text-white text-xs font-bold rounded"
               >
                 VIEW IN CATALOG
               </button>
 
-              <button 
+              <button
                 onClick={() => { onClose(); if (onAskAxis) onAskAxis(); }}
                 className="px-6 py-2.5 bg-axio-red hover:bg-red-600 text-white font-bold text-xs rounded flex items-center gap-2"
               >

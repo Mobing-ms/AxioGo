@@ -64,10 +64,10 @@ export const TrustedDataSection = () => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono text-xs font-semibold mb-4">
             <Database className="w-3.5 h-3.5" />
             <span>01. DATA ENGINEERING LAYER</span>
           </div>
@@ -86,7 +86,7 @@ export const TrustedDataSection = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
+
             {/* Databricks Side */}
             <div className="lg:col-span-5 p-5 bg-axio-bg border border-axio-border rounded-lg text-left font-mono">
               <div className="flex items-center gap-2 mb-3">
@@ -105,14 +105,14 @@ export const TrustedDataSection = () => {
 
             {/* Connection Flow Divider */}
             <div className="lg:col-span-2 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-full bg-axio-red/10 border border-axio-red/40 flex items-center justify-center text-axio-red my-2">
+              <div className="w-12 h-12 rounded-full bg-axio-red/10 border border-axio-red/18 flex items-center justify-center text-axio-red my-2">
                 <ArrowRight className="w-6 h-6 rotate-90 lg:rotate-0" />
               </div>
               <span className="font-mono text-[10px] text-axio-muted uppercase tracking-wider">SECURE CONNECTOR</span>
             </div>
 
             {/* AxioGo Layer */}
-            <div className="lg:col-span-5 p-5 bg-axio-card border border-axio-red/30 rounded-lg text-left font-mono">
+            <div className="lg:col-span-5 p-5 bg-axio-card border border-axio-red/15 rounded-lg text-left font-mono">
               <div className="flex items-center gap-2 mb-3">
                 <Cpu className="w-5 h-5 text-axio-red" />
                 <span className="text-sm font-bold text-white">AXIOGO DECISION LAYER</span>
@@ -143,11 +143,10 @@ export const TrustedDataSection = () => {
                 <button
                   key={stage.id}
                   onClick={() => setActiveStage(stage.id)}
-                  className={`p-4 rounded-lg border text-left font-mono transition-all ${
-                    isSelected 
-                      ? 'bg-axio-card border-axio-red shadow-lg shadow-axio-red/10 scale-105' 
+                  className={`p-4 rounded-lg border text-left font-mono transition-all ${isSelected
+                      ? 'bg-axio-card border-axio-red shadow-lg shadow-axio-red/10 scale-105'
                       : 'bg-axio-panel border-axio-border hover:border-axio-border-bright'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className={`w-2 h-2 rounded-full ${stage.dotColor}`} />

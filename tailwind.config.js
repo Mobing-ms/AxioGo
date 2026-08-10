@@ -29,9 +29,9 @@ export default {
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
-        mono: ['"Space Grotesk"', 'sans-serif'],
-        tech: ['"Space Grotesk"', 'sans-serif']
+        display: ['Poppins', 'sans-serif'],
+        mono: ['Poppins', 'sans-serif'],
+        tech: ['Poppins', 'sans-serif']
       },
       animation: {
         'pulse-glow': 'pulse-glow 3s infinite ease-in-out',

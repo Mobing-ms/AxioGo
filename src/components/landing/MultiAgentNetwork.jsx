@@ -27,10 +27,10 @@ export const MultiAgentNetwork = () => {
   return (
     <section className="py-24 bg-axio-bg border-b border-axio-border relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/30 text-axio-cyan font-mono text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-axio-cyan/10 border border-axio-cyan/15 text-axio-cyan font-mono text-xs font-semibold mb-4">
             <Sparkles className="w-3.5 h-3.5" />
             <span>04. PURPOSEFUL MULTI-AGENT INTELLIGENCE</span>
           </div>
@@ -47,33 +47,30 @@ export const MultiAgentNetwork = () => {
           <span className="text-axio-muted uppercase font-semibold mr-2">Simulate Workflow:</span>
           <button
             onClick={() => setActiveWorkflow('MAINTENANCE')}
-            className={`px-4 py-2 rounded border transition-all ${
-              activeWorkflow === 'MAINTENANCE' 
-                ? 'bg-axio-red text-white border-axio-red font-bold' 
+            className={`px-4 py-2 rounded border transition-all ${activeWorkflow === 'MAINTENANCE'
+                ? 'bg-axio-red text-white border-axio-red font-bold'
                 : 'bg-axio-panel text-axio-text-sub border-axio-border hover:border-axio-border-bright'
-            }`}
+              }`}
           >
             Maintenance Analysis Workflow
           </button>
 
           <button
             onClick={() => setActiveWorkflow('REPORT')}
-            className={`px-4 py-2 rounded border transition-all ${
-              activeWorkflow === 'REPORT' 
-                ? 'bg-axio-cyan text-black border-axio-cyan font-bold' 
+            className={`px-4 py-2 rounded border transition-all ${activeWorkflow === 'REPORT'
+                ? 'bg-axio-cyan text-black border-axio-cyan font-bold'
                 : 'bg-axio-panel text-axio-text-sub border-axio-border hover:border-axio-border-bright'
-            }`}
+              }`}
           >
             Report Synthesis Workflow
           </button>
 
           <button
             onClick={() => setActiveWorkflow('WORKFLOW')}
-            className={`px-4 py-2 rounded border transition-all ${
-              activeWorkflow === 'WORKFLOW' 
-                ? 'bg-amber-500 text-black border-amber-500 font-bold' 
+            className={`px-4 py-2 rounded border transition-all ${activeWorkflow === 'WORKFLOW'
+                ? 'bg-amber-500 text-black border-amber-500 font-bold'
                 : 'bg-axio-panel text-axio-text-sub border-axio-border hover:border-axio-border-bright'
-            }`}
+              }`}
           >
             Controlled Action Workflow
           </button>
@@ -81,7 +78,7 @@ export const MultiAgentNetwork = () => {
 
         {/* Interactive Agent Network Canvas / Grid Display */}
         <div className="p-8 bg-axio-panel border border-axio-border rounded-xl shadow-2xl relative overflow-hidden">
-          
+
           <div className="absolute top-4 left-4 font-mono text-[10px] text-axio-muted">
             ORCHESTRATION ARCHITECTURE: COORDINATOR TOPOLOGY
           </div>
@@ -95,22 +92,19 @@ export const MultiAgentNetwork = () => {
               return (
                 <div
                   key={agent.id}
-                  className={`p-5 rounded-lg border text-left font-mono transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-axio-card border-axio-red shadow-xl shadow-axio-red/10 scale-105' 
+                  className={`p-5 rounded-lg border text-left font-mono transition-all duration-300 ${isActive
+                      ? 'bg-axio-card border-axio-red shadow-xl shadow-axio-red/10 scale-105'
                       : 'bg-axio-bg/50 border-axio-border opacity-40'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className={`p-2 rounded border ${
-                      isActive ? 'bg-axio-red/20 border-axio-red text-axio-red' : 'bg-axio-panel border-axio-border text-axio-muted'
-                    }`}>
+                    <div className={`p-2 rounded border ${isActive ? 'bg-axio-red/20 border-axio-red text-axio-red' : 'bg-axio-panel border-axio-border text-axio-muted'
+                      }`}>
                       <IconComp className="w-5 h-5" />
                     </div>
 
-                    <span className={`text-[10px] px-2 py-0.5 rounded border ${
-                      isActive ? 'bg-axio-cyan/10 border-axio-cyan/40 text-axio-cyan font-bold' : 'bg-axio-panel border-axio-border text-axio-muted'
-                    }`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded border ${isActive ? 'bg-axio-cyan/10 border-axio-cyan/18 text-axio-cyan font-bold' : 'bg-axio-panel border-axio-border text-axio-muted'
+                      }`}>
                       {isActive ? 'ACTIVE' : 'IDLE'}
                     </span>
                   </div>

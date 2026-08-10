@@ -3,19 +3,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { getDatasets, getDatasetById } from '../../services/datasetService';
 import { RoleBadge } from '../common/RoleBadge';
-import { 
-  Database, 
-  Search, 
-  Filter, 
-  Upload, 
-  Bot, 
-  ExternalLink, 
-  X, 
-  CheckCircle2, 
-  Layers, 
-  ShieldCheck, 
-  BookOpen, 
-  Table, 
+import {
+  Database,
+  Search,
+  Filter,
+  Upload,
+  Bot,
+  ExternalLink,
+  X,
+  CheckCircle2,
+  Layers,
+  ShieldCheck,
+  BookOpen,
+  Table,
   ArrowRight,
   Sparkles
 } from 'lucide-react';
@@ -32,7 +32,7 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
 
   // Role filtering: Standard Users see catalog list but hidden raw SQL / deep schemas
   const filteredDatasets = datasets.filter(d => {
-    const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDomain = selectedDomain === 'ALL' || d.domain === selectedDomain;
     return matchesSearch && matchesDomain;
@@ -45,7 +45,7 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-mono text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-axio-border">
         <div>
@@ -72,7 +72,7 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
 
       {/* Search & Domain Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        
+
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-3 w-4 h-4 text-axio-muted" />
           <input
@@ -90,11 +90,10 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
             <button
               key={dom}
               onClick={() => setSelectedDomain(dom)}
-              className={`px-3 py-1.5 rounded border transition-colors whitespace-nowrap ${
-                selectedDomain === dom
-                  ? 'bg-axio-cyan text-black border-axio-cyan font-bold'
-                  : 'bg-axio-panel hover:bg-axio-card text-axio-text-sub border-axio-border'
-              }`}
+              className={`px-3 py-1.5 rounded transition-colors whitespace-nowrap ${selectedDomain === dom
+                  ? 'bg-axio-cyan text-black font-bold shadow-md shadow-axio-cyan/10'
+                  : 'bg-axio-panel hover:bg-axio-card text-axio-text-sub'
+                }`}
             >
               {dom}
             </button>
@@ -122,7 +121,7 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
               {filteredDatasets.map((ds) => (
                 <tr key={ds.id} className="hover:bg-axio-card/60 transition-colors">
                   <td className="p-4 font-bold text-white">
-                    <button 
+                    <button
                       onClick={() => { setDetailDataset(ds); setActiveTab('Overview'); }}
                       className="hover:text-axio-cyan text-left flex items-center gap-2"
                     >
@@ -146,14 +145,14 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => { setDetailDataset(ds); setActiveTab('Overview'); }}
-                        className="px-2.5 py-1 bg-axio-bg hover:bg-axio-hover border border-axio-border text-xs rounded text-axio-text-sub"
+                        className="px-2.5 py-1 bg-axio-bg hover:bg-axio-hover text-xs rounded text-axio-text-sub transition-colors"
                       >
                         Details
                       </button>
 
                       <button
                         onClick={() => handleAskAxisAboutDataset(ds.name)}
-                        className="px-2.5 py-1 bg-axio-red/10 border border-axio-red/30 hover:bg-axio-red/20 text-axio-red font-bold text-xs rounded flex items-center gap-1"
+                        className="px-2.5 py-1 bg-axio-red/12 hover:bg-axio-red text-axio-red hover:text-white font-bold text-xs rounded flex items-center gap-1 transition-colors"
                       >
                         <Bot className="w-3 h-3" />
                         <span>ASK AXIS</span>
@@ -171,8 +170,8 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
       {detailDataset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="relative w-full max-w-4xl max-h-[85vh] p-6 bg-axio-panel border border-axio-border rounded-lg shadow-2xl overflow-y-auto font-mono text-left">
-            
-            <button 
+
+            <button
               onClick={() => setDetailDataset(null)}
               className="absolute top-4 right-4 p-1.5 text-axio-muted hover:text-white rounded hover:bg-axio-card"
             >
@@ -193,11 +192,10 @@ export const DataCatalogView = ({ setActivePage, onOpenUploadModal }) => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 border-b-2 font-bold transition-all ${
-                    activeTab === tab 
-                      ? 'border-axio-red text-white' 
+                  className={`px-4 py-2 border-b-2 font-bold transition-all ${activeTab === tab
+                      ? 'border-axio-red text-white'
                       : 'border-transparent text-axio-muted hover:text-white'
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>

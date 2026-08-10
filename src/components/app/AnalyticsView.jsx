@@ -3,17 +3,17 @@ import { useAuth } from '../../context/AuthContext';
 import { MAINTENANCE_BY_CATEGORY, CLAIMS_SEVERITY_BREAKDOWN, AI_INSIGHT_CARDS } from '../../services/analyticsService';
 import { getReports, generateNewReport } from '../../services/reportService';
 import { RoleBadge } from '../common/RoleBadge';
-import { 
-  BarChart2, 
-  Bot, 
-  Sparkles, 
-  ArrowRight, 
-  TrendingUp, 
-  AlertTriangle, 
-  RefreshCw, 
-  FileText, 
-  Plus, 
-  Download, 
+import {
+  BarChart2,
+  Bot,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  AlertTriangle,
+  RefreshCw,
+  FileText,
+  Plus,
+  Download,
   FileCheck,
   Layers
 } from 'lucide-react';
@@ -51,7 +51,7 @@ export const AnalyticsView = ({ setActivePage }) => {
 
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-sans text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-axio-border">
         <div>
@@ -84,9 +84,8 @@ export const AnalyticsView = ({ setActivePage }) => {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2 border-b-2 font-bold transition-all ${
-              activeTab === t.id ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
-            }`}
+            className={`px-4 py-2 border-b-2 font-bold transition-all ${activeTab === t.id ? 'border-axio-red text-white' : 'border-transparent text-axio-muted hover:text-white'
+              }`}
           >
             {t.label}
           </button>
@@ -97,7 +96,7 @@ export const AnalyticsView = ({ setActivePage }) => {
       {activeTab === 'Analytics' && (
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Maintenance Cost by Category */}
             <div className="lg:col-span-7 p-6 bg-axio-panel border border-axio-border rounded-lg">
               <div className="flex items-center justify-between mb-4">
@@ -133,13 +132,13 @@ export const AnalyticsView = ({ setActivePage }) => {
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie 
-                      data={CLAIMS_SEVERITY_BREAKDOWN} 
-                      dataKey="count" 
-                      nameKey="status" 
-                      cx="50%" 
-                      cy="50%" 
-                      innerRadius={50} 
+                    <Pie
+                      data={CLAIMS_SEVERITY_BREAKDOWN}
+                      dataKey="count"
+                      nameKey="status"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
                       outerRadius={80}
                       paddingAngle={5}
                     >
@@ -263,12 +262,11 @@ export const AnalyticsView = ({ setActivePage }) => {
                     </td>
                     <td className="p-4 text-axio-cyan font-semibold">{rep.type}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${
-                        rep.format === 'PDF' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-                        rep.format === 'Excel' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                        rep.format === 'PowerPoint' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
-                        'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${rep.format === 'PDF' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                          rep.format === 'Excel' ? 'bg-emerald-500/10 border-emerald-500/15 text-emerald-400' :
+                            rep.format === 'PowerPoint' ? 'bg-amber-500/10 border-amber-500/15 text-amber-400' :
+                              'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                        }`}>
                         {rep.format}
                       </span>
                     </td>
@@ -293,7 +291,7 @@ export const AnalyticsView = ({ setActivePage }) => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans">
           <div className="relative w-full max-w-lg p-6 bg-axio-panel border border-axio-border rounded-lg shadow-2xl text-left">
-            
+
             <h2 className="text-base font-bold text-white uppercase mb-4 flex items-center gap-2 font-display">
               <FileText className="w-5 h-5 text-axio-green" />
               <span>SYNTHESIZE REPORT FROM AXIS ANALYTICS</span>
@@ -318,11 +316,10 @@ export const AnalyticsView = ({ setActivePage }) => {
                       key={fmt}
                       type="button"
                       onClick={() => setSelectedFormat(fmt)}
-                      className={`py-2 rounded border font-bold transition-colors ${
-                        selectedFormat === fmt 
-                          ? 'bg-axio-green text-black border-axio-green' 
+                      className={`py-2 rounded border font-bold transition-colors ${selectedFormat === fmt
+                          ? 'bg-axio-green text-black border-axio-green'
                           : 'bg-axio-bg text-axio-text-sub border-axio-border'
-                      }`}
+                        }`}
                     >
                       {fmt}
                     </button>

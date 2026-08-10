@@ -23,10 +23,10 @@ export const LoginView = ({ onLoginSuccess }) => {
       <div className="absolute w-[500px] h-[300px] bg-axio-red/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md p-8 bg-axio-panel border border-axio-border rounded-xl shadow-2xl">
-        
+
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-axio-red/10 border border-axio-red/40 flex items-center justify-center text-axio-red mx-auto mb-3">
+          <div className="w-12 h-12 rounded-xl bg-axio-red/10 border border-axio-red/18 flex items-center justify-center text-axio-red mx-auto mb-3">
             <Bot className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-white tracking-wider">AXIOGO</h1>
@@ -73,7 +73,7 @@ export const LoginView = ({ onLoginSuccess }) => {
           <div className="grid grid-cols-3 gap-2 text-[10px]">
             <button
               onClick={() => handleRolePresetLogin(ROLES.ADMIN)}
-              className="p-2 bg-axio-red/10 border border-axio-red/30 hover:bg-axio-red/20 text-axio-red font-bold rounded flex flex-col items-center gap-1"
+              className="p-2 bg-axio-red/10 border border-axio-red/15 hover:bg-axio-red/20 text-axio-red font-bold rounded flex flex-col items-center gap-1"
             >
               <Shield className="w-4 h-4" />
               <span>ADMIN</span>
@@ -81,7 +81,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
             <button
               onClick={() => handleRolePresetLogin(ROLES.AUTHORIZED)}
-              className="p-2 bg-axio-cyan/10 border border-axio-cyan/30 hover:bg-axio-cyan/20 text-axio-cyan font-bold rounded flex flex-col items-center gap-1"
+              className="p-2 bg-axio-cyan/10 border border-axio-cyan/15 hover:bg-axio-cyan/20 text-axio-cyan font-bold rounded flex flex-col items-center gap-1"
             >
               <UserCheck className="w-4 h-4" />
               <span>ANALYST</span>
