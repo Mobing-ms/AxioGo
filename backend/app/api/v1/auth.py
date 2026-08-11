@@ -33,6 +33,8 @@ from app.schemas.auth import (
     GoogleAuthRequest,
     LoginRequest,
     RefreshRequest,
+    RegisterResponse,
+    SyncPasswordRequest,
     TokenPair,
     UserRegisterRequest,
 )
@@ -184,13 +186,24 @@ async def _get_standard_role(
 
 @router.post(
     "/register",
-    response_model=TokenPair,
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
     payload: UserRegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Create (or re-sync) the AxioGo backend record that mirrors a
+    Supabase Auth signup.
+
+    IMPORTANT: this endpoint intentionally does NOT return AxioGo
+    access/refresh tokens. The account is created INACTIVE and can
+    only become ACTIVE through /auth/verify-email, once Supabase has
+    confirmed the user's email. Returning usable tokens here would let
+    anyone skip email verification entirely.
+    """
+
     normalized_email = (
         payload.email.strip().lower()
     )
@@ -221,12 +234,54 @@ async def register(
                 ),
             )
 
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "An account with this email address "
-                "already exists. Please sign in instead."
+        if (
+            existing_user.status
+            == UserStatus.ACTIVE.value
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "An account with this email address "
+                    "already exists. Please sign in instead."
+                ),
+            )
+
+        # --------------------------------------------------------
+        # PARTIAL / UNVERIFIED SIGNUP RETRY
+        #
+        # A LOCAL user that is still INACTIVE means a previous signup
+        # attempt never completed email verification (or the backend
+        # sync step failed after Supabase already created the auth
+        # user). Rather than trapping the person behind a permanent
+        # "already exists" error they can never get past, refresh the
+        # record in place so they can verify and continue.
+        # --------------------------------------------------------
+
+        existing_user.name = payload.name.strip()
+        existing_user.hashed_password = hash_password(
+            payload.password
+        )
+
+        await write_audit_log(
+            db,
+            user_id=existing_user.id,
+            role=RoleName.STANDARD_USER.value,
+            event="auth.register_retry",
+            resource="auth",
+            action=(
+                f"User {existing_user.email} retried "
+                "registration before verifying their email"
             ),
+        )
+
+        await db.commit()
+
+        return RegisterResponse(
+            message=(
+                "Account details updated. Please check your "
+                "email for the verification code."
+            ),
+            email=normalized_email,
         )
 
     # --------------------------------------------------------
@@ -236,7 +291,7 @@ async def register(
     role = await _get_standard_role(db)
 
     # --------------------------------------------------------
-    # CREATE ACTIVE LOCAL USER
+    # CREATE INACTIVE LOCAL USER (PENDING EMAIL VERIFICATION)
     # --------------------------------------------------------
 
     try:
@@ -248,7 +303,7 @@ async def register(
             ),
             role_id=role.id,
             auth_provider=AuthProviderType.LOCAL.value,
-            status=UserStatus.ACTIVE.value,
+            status=UserStatus.INACTIVE.value,
         )
 
         db.add(user)
@@ -265,21 +320,10 @@ async def register(
             ),
         ) from exc
 
-    role_name = await _get_user_role(db, user)
-
-    access_token = create_access_token(
-        user.id,
-        role_name,
-    )
-
-    refresh_token = create_refresh_token(
-        user.id,
-    )
-
     await write_audit_log(
         db,
         user_id=user.id,
-        role=role_name,
+        role=RoleName.STANDARD_USER.value,
         event="auth.register_success",
         resource="auth",
         action=f"User {user.email} registered",
@@ -287,9 +331,12 @@ async def register(
 
     await db.commit()
 
-    return TokenPair(
-        access_token=access_token,
-        refresh_token=refresh_token,
+    return RegisterResponse(
+        message=(
+            "Account created. Please check your email "
+            "for the verification code."
+        ),
+        email=normalized_email,
     )
 
 
@@ -342,15 +389,75 @@ async def verify_email(
     user = result.scalar_one_or_none()
 
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                "AxioGo account was not found "
-                "for this email address."
+        # --------------------------------------------------------
+        # SELF-HEAL A PARTIAL SIGNUP
+        #
+        # Supabase already confirmed this email, but the AxioGo
+        # backend never got (or lost) the matching user record --
+        # e.g. the /auth/register call failed after signUp()
+        # succeeded. Create the record now instead of leaving the
+        # person stuck with a verified Supabase account and no way
+        # into AxioGo.
+        # --------------------------------------------------------
+
+        role = await _get_standard_role(db)
+
+        metadata = (
+            supabase_user.get("user_metadata") or {}
+        )
+
+        display_name = (
+            metadata.get("full_name")
+            or metadata.get("name")
+            or email.split("@")[0]
+        ).strip()
+
+        user = User(
+            name=display_name,
+            email=email,
+
+            # No AxioGo password was ever captured for this
+            # self-healed record; the account remains unusable
+            # for direct login until the person sets a password
+            # through the normal Forgot Password flow.
+            hashed_password=hash_password(
+                GOOGLE_PLACEHOLDER_PASSWORD
+            ),
+
+            role_id=role.id,
+            auth_provider=AuthProviderType.LOCAL.value,
+            status=UserStatus.ACTIVE.value,
+        )
+
+        db.add(user)
+
+        try:
+            await db.flush()
+        except IntegrityError as exc:
+            await db.rollback()
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "An account with this email "
+                    "already exists."
+                ),
+            ) from exc
+
+        await write_audit_log(
+            db,
+            user_id=user.id,
+            role=RoleName.STANDARD_USER.value,
+            event="auth.verify_email_self_healed",
+            resource="auth",
+            action=(
+                f"AxioGo record for {user.email} was "
+                "recreated during email verification "
+                "after a partial signup"
             ),
         )
 
-    if (
+    elif (
         user.auth_provider
         != AuthProviderType.LOCAL.value
     ):
@@ -397,6 +504,102 @@ async def verify_email(
         access_token=access_token,
         refresh_token=refresh_token,
     )
+
+
+# ============================================================
+# SYNC PASSWORD (FORGOT PASSWORD COMPLETION)
+# ============================================================
+#
+# AxioGo's own /auth/login checks a password hash stored in the
+# AxioGo database, not Supabase. When a user resets their password
+# through Supabase (client-side supabase.auth.updateUser after the
+# recovery-link flow), that change only exists in Supabase -- the
+# AxioGo hash is never updated, so the person still can't log in
+# with their new password. This endpoint closes that gap: it
+# verifies the Supabase recovery session server-side, then updates
+# the matching AxioGo user's hashed_password so login stays in sync.
+
+@router.post(
+    "/sync-password",
+)
+async def sync_password(
+    payload: SyncPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    supabase_user = await _get_supabase_user(
+        payload.supabase_access_token
+    )
+
+    email = str(
+        supabase_user.get("email") or ""
+    ).strip().lower()
+
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Supabase did not return "
+                "a verified email address."
+            ),
+        )
+
+    result = await db.execute(
+        select(User).where(
+            func.lower(User.email) == email
+        )
+    )
+
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                "AxioGo account was not found "
+                "for this email address."
+            ),
+        )
+
+    if (
+        user.auth_provider
+        != AuthProviderType.LOCAL.value
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "This account uses Google sign-in. "
+                "Please continue with Google."
+            ),
+        )
+
+    user.hashed_password = hash_password(
+        payload.new_password
+    )
+
+    # A password reset is a strong signal the person owns the
+    # mailbox; also clears any lingering unverified state.
+    user.status = UserStatus.ACTIVE.value
+
+    await write_audit_log(
+        db,
+        user_id=user.id,
+        role=await _get_user_role(db, user),
+        event="auth.password_synced",
+        resource="auth",
+        action=(
+            f"User {user.email} completed a password "
+            "reset and their AxioGo password was re-synced"
+        ),
+    )
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "data": {
+            "message": "Password updated.",
+        },
+    }
 
 
 # ============================================================

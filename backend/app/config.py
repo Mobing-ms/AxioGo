@@ -11,7 +11,14 @@ environment variables or a secrets manager.
 
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# This value is deliberately limited to local development and tests. A
+# deployed instance must always receive a unique secret through its runtime
+# environment or secrets manager.
+LOCAL_DEVELOPMENT_JWT_SECRET = "axiogo-local-development-secret-not-for-production"
 
 
 class Settings(BaseSettings):
@@ -35,7 +42,7 @@ class Settings(BaseSettings):
     # Current custom JWT configuration.
     # This will be replaced/updated when Supabase Auth becomes
     # the primary authentication mechanism.
-    JWT_SECRET: str = "INSECURE-DEV-SECRET-CHANGE-ME"
+    JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -66,6 +73,26 @@ class Settings(BaseSettings):
     # --- SQL execution guardrails ---
     SQL_READ_ONLY: bool = True
     SQL_MAX_ROWS: int = 1000
+
+    @model_validator(mode="after")
+    def require_a_valid_jwt_secret(self) -> "Settings":
+        """Use a usable local key, but never allow an empty production key.
+
+        An empty ``JWT_SECRET=`` in ``.env`` overrides Pydantic's field
+        default. That previously let the application start successfully and
+        then crash on every successful login when PyJWT tried to sign a token.
+        """
+        if self.JWT_SECRET.strip():
+            return self
+
+        local_environments = {"development", "dev", "local", "test", "testing"}
+        if self.ENVIRONMENT.strip().lower() in local_environments:
+            self.JWT_SECRET = LOCAL_DEVELOPMENT_JWT_SECRET
+            return self
+
+        raise ValueError(
+            "JWT_SECRET must be set to a strong, unique value outside local development."
+        )
 
     @property
     def cors_origins_list(self) -> list[str]:

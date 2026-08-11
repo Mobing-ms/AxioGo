@@ -75,6 +75,18 @@ class VerifyEmailRequest(BaseModel):
     supabase_access_token: str = Field(min_length=1)
 
 
+class RegisterResponse(BaseModel):
+    success: bool = True
+    message: str
+    email: str
+    verification_required: bool = True
+
+
+class SyncPasswordRequest(BaseModel):
+    supabase_access_token: str = Field(min_length=1)
+    new_password: str = Field(min_length=8)
+
+
 class GoogleAuthRequest(BaseModel):
     supabase_access_token: str | None = None
     email: EmailStr | None = None

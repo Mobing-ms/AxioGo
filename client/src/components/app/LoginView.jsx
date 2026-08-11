@@ -523,7 +523,8 @@ export const LoginView = ({ onLoginSuccess }) => {
         lowerMessage.includes('http 505')
       ) {
         setError(
-          'AxioGo could not complete account creation right now. Please try again shortly.'
+          message ||
+          'The authentication service could not complete account creation. Please try again shortly.'
         );
         return;
       }

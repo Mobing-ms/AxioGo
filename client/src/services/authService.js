@@ -425,6 +425,48 @@ export const authService = {
       );
     }
 
+    /*
+     * Supabase now holds the new password, but AxioGo's own
+     * /auth/login checks a separately-stored password hash.
+     * Without this sync step, the reset would appear to succeed
+     * while login with the new password kept failing. The Supabase
+     * recovery session (established when the user opened the
+     * reset-password link) is what proves ownership of the account
+     * here, so we pass its access token along.
+     */
+
+    const {
+      data: sessionData,
+    } = await client.auth.getSession();
+
+    const accessToken =
+      sessionData?.session?.access_token;
+
+    if (!accessToken) {
+      throw new Error(
+        'Your password reset session has expired. ' +
+        'Please request a new password reset link.'
+      );
+    }
+
+    try {
+      await apiClient.post(
+        '/auth/sync-password',
+        {
+          supabase_access_token: accessToken,
+          new_password: password,
+        },
+        { auth: false }
+      );
+    } catch (syncError) {
+      throw new Error(
+        getErrorMessage(syncError) ||
+        'Your password was updated, but AxioGo could not ' +
+        'finish syncing it. Please try signing in, or reset ' +
+        'your password again.'
+      );
+    }
+
     return true;
   },
 
