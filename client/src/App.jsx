@@ -1,6 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { AuthProvider } from './context/AuthContext';
+import {
+  AuthProvider,
+  useAuth,
+} from './context/AuthContext';
+
 import { WorkspaceProvider } from './context/WorkspaceContext';
 
 // Common Components
@@ -18,6 +26,9 @@ import { MultiAgentNetwork } from './components/landing/MultiAgentNetwork';
 import { DecisionStorySection } from './components/landing/DecisionStorySection';
 import { AutomotiveDomains } from './components/landing/AutomotiveDomains';
 
+// Auth
+import { LoginView } from './components/app/LoginView';
+
 // Authenticated Application Views
 import { DashboardView } from './components/app/DashboardView';
 import { WorkspaceView } from './components/app/WorkspaceView';
@@ -32,20 +43,74 @@ import { AdminView } from './components/app/AdminView';
 import { AuditLogsView } from './components/app/AuditLogsView';
 import { NotificationsDrawer } from './components/app/NotificationsDrawer';
 import { AboutView } from './components/app/AboutView';
-import { LoginView } from './components/app/LoginView';
 import { SettingsView } from './components/app/SettingsView';
 
 
 /* ================================================================
-   SCROLL REVEAL
-
-   IMPORTANT:
-   This is ONLY used for sections AFTER ScrollTypography.
-
-   It does not wrap or modify ScrollTypography.
+   AUTHENTICATION LOADING SCREEN
 ================================================================ */
 
-const ScrollReveal = ({ children, delay = 0 }) => {
+function AuthLoadingScreen() {
+  return (
+    <div className="
+      min-h-screen
+      w-full
+      bg-axio-bg
+      text-white
+      flex
+      items-center
+      justify-center
+    ">
+      <div className="
+        flex
+        flex-col
+        items-center
+        gap-5
+      ">
+
+        <div className="
+          text-3xl
+          font-black
+          tracking-[-0.06em]
+        ">
+          AXIO<span className="text-axio-red">GO</span>
+        </div>
+
+        <div className="
+          flex
+          items-center
+          gap-2
+          text-[9px]
+          uppercase
+          tracking-[0.3em]
+          text-axio-muted
+        ">
+          <span className="
+            w-1.5
+            h-1.5
+            rounded-full
+            bg-axio-red
+            animate-pulse
+            shadow-[0_0_10px_rgba(255,48,70,0.7)]
+          " />
+
+          AUTHENTICATING
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+/* ================================================================
+   SCROLL REVEAL
+================================================================ */
+
+const ScrollReveal = ({
+  children,
+  delay = 0,
+}) => {
   const elementRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -54,34 +119,29 @@ const ScrollReveal = ({ children, delay = 0 }) => {
 
     if (!element) return;
 
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
+    const prefersReducedMotion =
+      window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches;
 
     if (prefersReducedMotion) {
       setVisible(true);
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-
-          // Only animate once.
-          observer.unobserve(element);
+    const observer =
+      new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            observer.unobserve(element);
+          }
+        },
+        {
+          threshold: 0.08,
+          rootMargin: '0px 0px -80px 0px',
         }
-      },
-      {
-        threshold: 0.08,
-
-        /*
-         * Start the reveal slightly before the
-         * section reaches the viewport center.
-         */
-        rootMargin: '0px 0px -80px 0px',
-      }
-    );
+      );
 
     observer.observe(element);
 
@@ -110,10 +170,12 @@ const ScrollReveal = ({ children, delay = 0 }) => {
 
 /* ================================================================
    MAIN APP CONTENT
+   Only rendered after successful authentication.
 ================================================================ */
 
 function MainAppContent() {
-  const [activePage, setActivePage] = useState('landing');
+  const [activePage, setActivePage] =
+    useState('landing');
 
   const [isVoiceModalOpen, setIsVoiceModalOpen] =
     useState(false);
@@ -124,28 +186,34 @@ function MainAppContent() {
   const [isUploadModalOpen, setIsUploadModalOpen] =
     useState(false);
 
+  const { logout } = useAuth();
+
 
   /* ================================================================
-     LOGIN
+     LOGOUT
   ================================================================= */
 
-  if (activePage === 'login') {
-    return (
-      <LoginView
-        onLoginSuccess={() => setActivePage('dashboard')}
-      />
-    );
-  }
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        'Logout failed:',
+        error
+      );
+    }
+  };
 
 
   return (
-    <div className="min-h-screen bg-axio-bg text-white">
+    <div className="
+      min-h-screen
+      bg-axio-bg
+      text-white
+    ">
 
       {/* ==========================================================
           SCROLL REVEAL STYLES
-          
-          These styles only apply to the individual wrappers
-          AFTER ScrollTypography.
       ========================================================== */}
 
       <style>{`
@@ -173,7 +241,6 @@ function MainAppContent() {
             filter;
         }
 
-
         .axio-scroll-reveal-visible {
           opacity: 1;
 
@@ -183,7 +250,6 @@ function MainAppContent() {
 
           filter: blur(0);
         }
-
 
         @media (prefers-reduced-motion: reduce) {
 
@@ -195,7 +261,6 @@ function MainAppContent() {
           }
 
         }
-
 
         @media (max-width: 640px) {
 
@@ -233,6 +298,7 @@ function MainAppContent() {
         onOpenNotifications={() =>
           setIsNotificationsOpen(true)
         }
+        onLogout={handleLogout}
       />
 
 
@@ -244,22 +310,10 @@ function MainAppContent() {
 
         {/* ========================================================
             LANDING PAGE
-
-            IMPORTANT:
-            NO overflow-hidden here.
-
-            ScrollTypography uses position: sticky and MUST remain
-            connected to the viewport scrolling context.
         ======================================================== */}
 
         {activePage === 'landing' && (
           <div>
-
-            {/* ====================================================
-                HERO
-
-                Existing Hero animation remains untouched.
-            ==================================================== */}
 
             <HeroSection
               onAskAxis={() =>
@@ -270,47 +324,15 @@ function MainAppContent() {
               }
             />
 
-
-            {/* ====================================================
-                SCROLL TYPOGRAPHY
-
-                DO NOT WRAP THIS.
-
-                DO NOT PUT IT INSIDE A TRANSFORMED ELEMENT.
-
-                DO NOT PUT IT INSIDE overflow-hidden.
-
-                Its own sticky + scroll-progress system controls
-                DATA → CONTEXT → INTELLIGENCE → DECISION → ACTION.
-            ==================================================== */}
-
             <ScrollTypography />
-
-
-            {/* ====================================================
-                TRUSTED DATA
-
-                Scroll-triggered reveal begins AFTER the
-                typography animation.
-            ==================================================== */}
 
             <ScrollReveal delay={0}>
               <TrustedDataSection />
             </ScrollReveal>
 
-
-            {/* ====================================================
-                BUSINESS CONTEXT
-            ==================================================== */}
-
             <ScrollReveal delay={80}>
               <BusinessContextSection />
             </ScrollReveal>
-
-
-            {/* ====================================================
-                AXIS DEMO
-            ==================================================== */}
 
             <ScrollReveal delay={120}>
               <AxisDemoSection
@@ -320,19 +342,9 @@ function MainAppContent() {
               />
             </ScrollReveal>
 
-
-            {/* ====================================================
-                MULTI-AGENT NETWORK
-            ==================================================== */}
-
             <ScrollReveal delay={80}>
               <MultiAgentNetwork />
             </ScrollReveal>
-
-
-            {/* ====================================================
-                DECISION STORY
-            ==================================================== */}
 
             <ScrollReveal delay={120}>
               <DecisionStorySection
@@ -342,11 +354,6 @@ function MainAppContent() {
               />
             </ScrollReveal>
 
-
-            {/* ====================================================
-                AUTOMOTIVE DOMAINS
-            ==================================================== */}
-
             <ScrollReveal delay={80}>
               <AutomotiveDomains />
             </ScrollReveal>
@@ -355,9 +362,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            ABOUT
-        ======================================================== */}
+        {/* ABOUT */}
 
         {activePage === 'about' && (
           <AboutView
@@ -366,9 +371,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            DASHBOARD
-        ======================================================== */}
+        {/* DASHBOARD */}
 
         {activePage === 'dashboard' && (
           <DashboardView
@@ -377,9 +380,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            WORKSPACE
-        ======================================================== */}
+        {/* WORKSPACE */}
 
         {activePage === 'workspace' && (
           <WorkspaceView
@@ -397,9 +398,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            DATA CATALOG
-        ======================================================== */}
+        {/* DATA CATALOG */}
 
         {activePage === 'catalog' && (
           <DataCatalogView
@@ -411,9 +410,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            ANALYTICS
-        ======================================================== */}
+        {/* ANALYTICS */}
 
         {activePage === 'analytics' && (
           <AnalyticsView
@@ -422,9 +419,7 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            AXIS
-        ======================================================== */}
+        {/* AXIS */}
 
         {activePage === 'axis' && (
           <AxisWorkspace
@@ -441,54 +436,42 @@ function MainAppContent() {
         )}
 
 
-        {/* ========================================================
-            REPORTS
-        ======================================================== */}
+        {/* REPORTS */}
 
         {activePage === 'reports' && (
           <ReportsView />
         )}
 
 
-        {/* ========================================================
-            POWER BI
-        ======================================================== */}
+        {/* POWER BI */}
 
         {activePage === 'powerbi' && (
           <PowerBiView />
         )}
 
 
-        {/* ========================================================
-            ACTIONS
-        ======================================================== */}
+        {/* ACTIONS */}
 
         {activePage === 'actions' && (
           <ActionsView />
         )}
 
 
-        {/* ========================================================
-            ADMIN
-        ======================================================== */}
+        {/* ADMIN */}
 
         {activePage === 'admin' && (
           <AdminView />
         )}
 
 
-        {/* ========================================================
-            AUDIT
-        ======================================================== */}
+        {/* AUDIT */}
 
         {activePage === 'audit' && (
           <AuditLogsView />
         )}
 
 
-        {/* ========================================================
-            SETTINGS
-        ======================================================== */}
+        {/* SETTINGS */}
 
         {activePage === 'settings' && (
           <SettingsView />
@@ -554,6 +537,35 @@ function MainAppContent() {
 
 
 /* ================================================================
+   AUTHENTICATION GATE
+================================================================ */
+
+function AuthenticatedApp() {
+  const {
+    session,
+    loading,
+  } = useAuth();
+
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (!session) {
+    return (
+      <LoginView
+        onLoginSuccess={() => {
+          // Supabase's auth state listener updates
+          // the session automatically.
+        }}
+      />
+    );
+  }
+
+  return <MainAppContent />;
+}
+
+
+/* ================================================================
    ROOT APP
 ================================================================ */
 
@@ -561,7 +573,7 @@ export default function App() {
   return (
     <AuthProvider>
       <WorkspaceProvider>
-        <MainAppContent />
+        <AuthenticatedApp />
       </WorkspaceProvider>
     </AuthProvider>
   );

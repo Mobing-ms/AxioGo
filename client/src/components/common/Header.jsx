@@ -1,56 +1,226 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, ROLES } from '../../context/AuthContext';
-import { useWorkspace } from '../../context/WorkspaceContext';
-import { RoleBadge } from './RoleBadge';
+import React, {
+  useState,
+  useEffect,
+} from 'react';
+
+import {
+  useAuth,
+} from '../../context/AuthContext';
+
+import {
+  useWorkspace,
+} from '../../context/WorkspaceContext';
 
 import {
   Bell,
   ChevronDown,
   Settings,
-  LogOut
+  LogOut,
+  User,
 } from 'lucide-react';
 
 export const Header = ({
   activePage,
   setActivePage,
-  onOpenNotifications
+  onOpenNotifications,
 }) => {
-  const { currentRole, currentUser, switchRole } = useAuth();
-  const { notifications } = useWorkspace();
+  const {
+    currentRole,
+    currentUser,
+    logout,
+  } = useAuth();
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const {
+    notifications,
+  } = useWorkspace();
 
-  const unreadCount = notifications.filter(
-    (n) => !n.read
-  ).length;
+  const [
+    isScrolled,
+    setIsScrolled,
+  ] = useState(false);
+
+  const [
+    isUserMenuOpen,
+    setIsUserMenuOpen,
+  ] = useState(false);
+
+  const [
+    isLoggingOut,
+    setIsLoggingOut,
+  ] = useState(false);
+
+  // ==========================================================
+  // SAFE USER VALUES
+  // ==========================================================
+
+  const displayName =
+    currentUser?.name ||
+    currentUser?.username ||
+    currentUser?.email?.split('@')[0] ||
+    'AxioGo User';
+
+  const displayEmail =
+    currentUser?.email ||
+    '';
+
+  const avatar =
+    currentUser?.avatar ||
+    displayName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(
+        (part) =>
+          part[0]
+      )
+      .join('')
+      .toUpperCase() ||
+    'AX';
+
+  // ==========================================================
+  // NOTIFICATIONS
+  // ==========================================================
+
+  const unreadCount =
+    notifications?.filter(
+      (n) => !n.read
+    ).length || 0;
+
+  // ==========================================================
+  // SCROLL
+  // ==========================================================
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(
+        window.scrollY > 20
+      );
     };
 
-    window.addEventListener('scroll', handleScroll, {
-      passive: true
-    });
+    window.addEventListener(
+      'scroll',
+      handleScroll,
+      {
+        passive: true,
+      }
+    );
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener(
+        'scroll',
+        handleScroll
+      );
     };
   }, []);
 
-  const navItems = [
-    { id: 'landing', label: 'Home' },
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'catalog', label: 'Data Catalog' },
-    { id: 'analytics', label: 'Analytics & Reports' },
-    { id: 'axis', label: 'AXIS AI' },
-    { id: 'actions', label: 'Actions & Governance' },
+  // ==========================================================
+  // NAVIGATION
+  // ==========================================================
 
-    ...(currentRole === ROLES.ADMIN
-      ? [{ id: 'admin', label: 'Admin' }]
-      : [])
+  const navItems = [
+    {
+      id: 'landing',
+      label: 'Home',
+    },
+
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+    },
+
+    {
+      id: 'catalog',
+      label: 'Data Catalog',
+    },
+
+    {
+      id: 'analytics',
+      label: 'Analytics & Reports',
+    },
+
+    {
+      id: 'axis',
+      label: 'AXIS AI',
+    },
+
+    {
+      id: 'actions',
+      label: 'Actions & Governance',
+    },
+
+    ...(currentRole === 'ADMIN'
+      ? [
+        {
+          id: 'admin',
+          label: 'Admin',
+        },
+      ]
+      : []),
   ];
+
+  // ==========================================================
+  // LOGOUT
+  // ==========================================================
+
+  const handleLogout =
+    async () => {
+      if (isLoggingOut) {
+        return;
+      }
+
+      setIsLoggingOut(true);
+
+      setIsUserMenuOpen(false);
+
+      try {
+        await logout();
+
+        /*
+         * DO NOT:
+         *
+         * setActivePage('login')
+         *
+         * App.jsx is responsible for deciding whether
+         * LoginView or the authenticated application
+         * should be rendered.
+         *
+         * logout() clears the Supabase session,
+         * which causes App.jsx to render LoginView.
+         */
+      } catch (error) {
+        console.error(
+          'Logout failed:',
+          error
+        );
+
+        /*
+         * AuthContext has already cleared the
+         * local authentication state.
+         *
+         * Therefore the user will still be taken
+         * out of the protected application.
+         */
+      } finally {
+        setIsLoggingOut(false);
+      }
+    };
+
+  // ==========================================================
+  // SETTINGS
+  // ==========================================================
+
+  const handleSettings =
+    () => {
+      setActivePage(
+        'settings'
+      );
+
+      setIsUserMenuOpen(false);
+    };
+
+  // ==========================================================
+  // RENDER
+  // ==========================================================
 
   return (
     <header
@@ -62,6 +232,7 @@ export const Header = ({
         z-40
         transition-all
         duration-300
+
         ${isScrolled
           ? `
               bg-[#07090D]/90
@@ -91,12 +262,16 @@ export const Header = ({
         "
       >
 
-        {/* ========================================================
-            AXIOGO TEXT BRAND
-        ======================================================== */}
+        {/* ====================================================
+            AXIOGO BRAND
+        ==================================================== */}
 
         <button
-          onClick={() => setActivePage('landing')}
+          onClick={() =>
+            setActivePage(
+              'landing'
+            )
+          }
           className="
             group
             flex
@@ -107,6 +282,7 @@ export const Header = ({
           "
           aria-label="AxioGo Home"
         >
+
           <span
             className="
               font-display
@@ -118,6 +294,7 @@ export const Header = ({
               whitespace-nowrap
             "
           >
+
             <span
               className="
                 text-white
@@ -140,13 +317,15 @@ export const Header = ({
             >
               Go
             </span>
+
           </span>
+
         </button>
 
 
-        {/* ========================================================
+        {/* ====================================================
             DESKTOP NAVIGATION
-        ======================================================== */}
+        ==================================================== */}
 
         <nav
           className="
@@ -158,61 +337,75 @@ export const Header = ({
             flex-1
           "
         >
-          {navItems.map((item) => {
-            const isActive = activePage === item.id;
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActivePage(item.id)}
-                className={`
-                  relative
-                  px-3.5
-                  py-2
-                  rounded-md
-                  text-xs
-                  font-semibold
-                  transition-all
-                  duration-200
+          {navItems.map(
+            (item) => {
+              const isActive =
+                activePage ===
+                item.id;
 
-                  ${isActive
-                    ? `
-                        text-white
-                        bg-white/[0.025]
-                      `
-                    : `
-                        text-axio-text-secondary
-                        hover:text-white
-                        hover:bg-white/[0.025]
-                      `
+              return (
+                <button
+                  key={
+                    item.id
                   }
-                `}
-              >
-                {item.label}
+                  onClick={() =>
+                    setActivePage(
+                      item.id
+                    )
+                  }
+                  className={`
+                    relative
+                    px-3.5
+                    py-2
+                    rounded-md
+                    text-xs
+                    font-semibold
+                    transition-all
+                    duration-200
 
-                {isActive && (
-                  <span
-                    className="
-                      absolute
-                      bottom-0
-                      left-3
-                      right-3
-                      h-[2px]
-                      bg-axio-red
-                      rounded-full
-                      shadow-[0_0_10px_rgba(255,48,70,0.65)]
-                    "
-                  />
-                )}
-              </button>
-            );
-          })}
+                    ${isActive
+                      ? `
+                          text-white
+                          bg-white/[0.025]
+                        `
+                      : `
+                          text-axio-text-secondary
+                          hover:text-white
+                          hover:bg-white/[0.025]
+                        `
+                    }
+                  `}
+                >
+
+                  {item.label}
+
+                  {isActive && (
+                    <span
+                      className="
+                        absolute
+                        bottom-0
+                        left-3
+                        right-3
+                        h-[2px]
+                        bg-axio-red
+                        rounded-full
+                        shadow-[0_0_10px_rgba(255,48,70,0.65)]
+                      "
+                    />
+                  )}
+
+                </button>
+              );
+            }
+          )}
+
         </nav>
 
 
-        {/* ========================================================
-            RIGHT SIDE CONTROLS
-        ======================================================== */}
+        {/* ====================================================
+            RIGHT CONTROLS
+        ==================================================== */}
 
         <div
           className="
@@ -225,12 +418,14 @@ export const Header = ({
           "
         >
 
-          {/* ======================================================
+          {/* ==================================================
               NOTIFICATIONS
-          ====================================================== */}
+          ================================================== */}
 
           <button
-            onClick={onOpenNotifications}
+            onClick={
+              onOpenNotifications
+            }
             className="
               group
               relative
@@ -253,6 +448,7 @@ export const Header = ({
             title="Notifications"
             aria-label="Notifications"
           >
+
             <div
               className="
                 absolute
@@ -309,18 +505,26 @@ export const Header = ({
                 />
               </>
             )}
+
           </button>
 
 
-          {/* ======================================================
-              USER / ROLE MENU
-          ====================================================== */}
+          {/* ==================================================
+              USER MENU
+          ================================================== */}
 
-          <div className="relative">
+          <div
+            className="
+              relative
+            "
+          >
 
             <button
               onClick={() =>
-                setIsRoleDropdownOpen(!isRoleDropdownOpen)
+                setIsUserMenuOpen(
+                  (previous) =>
+                    !previous
+                )
               }
               className="
                 group
@@ -338,9 +542,13 @@ export const Header = ({
                 transition-all
                 duration-300
               "
+              aria-label="Open account menu"
+              aria-expanded={
+                isUserMenuOpen
+              }
             >
 
-              {/* Avatar */}
+              {/* AVATAR */}
 
               <div
                 className="
@@ -361,6 +569,7 @@ export const Header = ({
                   overflow-hidden
                 "
               >
+
                 <div
                   className="
                     absolute
@@ -372,13 +581,18 @@ export const Header = ({
                   "
                 />
 
-                <span className="relative">
-                  {currentUser.avatar}
+                <span
+                  className="
+                    relative
+                  "
+                >
+                  {avatar}
                 </span>
+
               </div>
 
 
-              {/* User information */}
+              {/* USER INFORMATION */}
 
               <div
                 className="
@@ -389,16 +603,20 @@ export const Header = ({
                   font-sans
                 "
               >
+
                 <div
                   className="
                     text-white
                     font-semibold
                     truncate
-                    max-w-[105px]
+                    max-w-[125px]
                     leading-tight
                   "
+                  title={
+                    displayName
+                  }
                 >
-                  {currentUser.name}
+                  {displayName}
                 </div>
 
                 <div
@@ -413,6 +631,7 @@ export const Header = ({
                 >
                   {currentRole}
                 </div>
+
               </div>
 
 
@@ -423,7 +642,8 @@ export const Header = ({
                   text-axio-muted
                   transition-transform
                   duration-300
-                  ${isRoleDropdownOpen
+
+                  ${isUserMenuOpen
                     ? 'rotate-180 text-white'
                     : ''
                   }
@@ -433,17 +653,17 @@ export const Header = ({
             </button>
 
 
-            {/* ====================================================
-                ROLE DROPDOWN
-            ==================================================== */}
+            {/* ==================================================
+                ACCOUNT DROPDOWN
+            ================================================== */}
 
-            {isRoleDropdownOpen && (
+            {isUserMenuOpen && (
               <div
                 className="
                   absolute
                   right-0
                   mt-2.5
-                  w-64
+                  w-72
                   p-2
                   bg-[#0B0F14]/95
                   backdrop-blur-2xl
@@ -456,161 +676,257 @@ export const Header = ({
                 "
               >
 
+                {/* ACCOUNT SUMMARY */}
+
                 <div
                   className="
                     px-3
-                    py-2.5
+                    py-3
                     mb-2
                     border-b
                     border-white/[0.05]
                   "
                 >
-                  <p
+
+                  <div
                     className="
-                      text-[9px]
-                      text-axio-muted
-                      uppercase
-                      tracking-[0.16em]
-                      font-semibold
+                      flex
+                      items-center
+                      gap-3
                     "
                   >
-                    Enterprise RBAC Role
-                  </p>
 
-                  <p
-                    className="
-                      text-xs
-                      text-white
-                      font-semibold
-                      mt-1
-                    "
-                  >
-                    Switch Role Context
-                  </p>
-                </div>
-
-
-                {/* Roles */}
-
-                <div className="space-y-1 mb-2">
-
-                  {Object.values(ROLES).map((role) => (
-                    <button
-                      key={role}
-                      onClick={() => {
-                        switchRole(role);
-                        setIsRoleDropdownOpen(false);
-                      }}
-                      className={`
-                        w-full
+                    <div
+                      className="
+                        w-9
+                        h-9
+                        rounded-lg
+                        bg-[#10141A]
+                        border
+                        border-white/[0.07]
                         flex
                         items-center
-                        justify-between
-                        px-3
-                        py-2.5
-                        rounded-lg
+                        justify-center
                         text-xs
-                        font-semibold
-                        transition-all
-                        duration-200
+                        font-bold
+                        text-white
+                      "
+                    >
+                      {avatar}
+                    </div>
 
-                        ${currentRole === role
-                          ? `
-                              bg-axio-red/[0.08]
-                              text-white
-                              shadow-[inset_2px_0_0_#FF3046]
-                            `
-                          : `
-                              text-axio-text-secondary
-                              hover:text-white
-                              hover:bg-white/[0.035]
-                            `
-                        }
-                      `}
+                    <div
+                      className="
+                        min-w-0
+                        flex-1
+                      "
                     >
 
-                      <RoleBadge
-                        role={role}
-                        compact
-                      />
+                      <p
+                        className="
+                          text-xs
+                          text-white
+                          font-semibold
+                          truncate
+                        "
+                      >
+                        {displayName}
+                      </p>
 
-                      {currentRole === role && (
-                        <span
-                          className="
-                            w-1.5
-                            h-1.5
-                            rounded-full
-                            bg-axio-red
-                            shadow-[0_0_7px_rgba(255,48,70,0.7)]
-                          "
-                        />
-                      )}
+                      <p
+                        className="
+                          text-[10px]
+                          text-axio-muted
+                          truncate
+                          mt-0.5
+                        "
+                        title={
+                          displayEmail
+                        }
+                      >
+                        {displayEmail}
+                      </p>
 
-                    </button>
-                  ))}
+                    </div>
+
+                  </div>
+
+
+                  {/* ROLE */}
+
+                  <div
+                    className="
+                      mt-3
+                      flex
+                      items-center
+                      justify-between
+                      px-2.5
+                      py-2
+                      rounded-lg
+                      bg-white/[0.025]
+                      border
+                      border-white/[0.04]
+                    "
+                  >
+
+                    <span
+                      className="
+                        text-[9px]
+                        text-axio-muted
+                        uppercase
+                        tracking-[0.14em]
+                        font-semibold
+                      "
+                    >
+                      AxioGo Role
+                    </span>
+
+                    <span
+                      className="
+                        text-[9px]
+                        text-white
+                        font-bold
+                        uppercase
+                        tracking-wide
+                      "
+                    >
+                      {currentRole}
+                    </span>
+
+                  </div>
 
                 </div>
 
 
-                {/* Bottom actions */}
+                {/* SETTINGS */}
+
+                <button
+                  onClick={
+                    handleSettings
+                  }
+                  className="
+                    w-full
+                    flex
+                    items-center
+                    gap-2.5
+                    px-3
+                    py-2.5
+                    rounded-lg
+                    text-xs
+                    text-axio-text-secondary
+                    hover:text-white
+                    hover:bg-white/[0.035]
+                    font-medium
+                    transition-all
+                  "
+                >
+
+                  <Settings
+                    className="
+                      w-3.5
+                      h-3.5
+                    "
+                  />
+
+                  <span>
+                    Settings & Preferences
+                  </span>
+
+                </button>
+
+
+                {/* PROFILE */}
+
+                <button
+                  onClick={() => {
+                    setActivePage(
+                      'settings'
+                    );
+
+                    setIsUserMenuOpen(
+                      false
+                    );
+                  }}
+                  className="
+                    w-full
+                    flex
+                    items-center
+                    gap-2.5
+                    px-3
+                    py-2.5
+                    rounded-lg
+                    text-xs
+                    text-axio-text-secondary
+                    hover:text-white
+                    hover:bg-white/[0.035]
+                    font-medium
+                    transition-all
+                  "
+                >
+
+                  <User
+                    className="
+                      w-3.5
+                      h-3.5
+                    "
+                  />
+
+                  <span>
+                    My Profile
+                  </span>
+
+                </button>
+
+
+                {/* LOGOUT */}
 
                 <div
                   className="
                     border-t
                     border-white/[0.05]
-                    pt-2
-                    space-y-1
+                    mt-1.5
+                    pt-1.5
                   "
                 >
 
                   <button
-                    onClick={() => {
-                      setActivePage('settings');
-                      setIsRoleDropdownOpen(false);
-                    }}
+                    onClick={
+                      handleLogout
+                    }
+                    disabled={
+                      isLoggingOut
+                    }
                     className="
                       w-full
                       flex
                       items-center
                       gap-2.5
                       px-3
-                      py-2
-                      rounded-lg
-                      text-xs
-                      text-axio-text-secondary
-                      hover:text-white
-                      hover:bg-white/[0.035]
-                      font-medium
-                      transition-all
-                    "
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>Settings & Preferences</span>
-                  </button>
-
-
-                  <button
-                    onClick={() => {
-                      setActivePage('login');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                    className="
-                      w-full
-                      flex
-                      items-center
-                      gap-2.5
-                      px-3
-                      py-2
+                      py-2.5
                       rounded-lg
                       text-xs
                       text-axio-red
                       hover:bg-axio-red/[0.07]
                       font-medium
                       transition-all
+                      disabled:opacity-50
+                      disabled:cursor-not-allowed
                     "
                   >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out / Switch User</span>
+
+                    <LogOut
+                      className="
+                        w-3.5
+                        h-3.5
+                      "
+                    />
+
+                    <span>
+                      {isLoggingOut
+                        ? 'Signing Out...'
+                        : 'Sign Out'}
+                    </span>
+
                   </button>
 
                 </div>
