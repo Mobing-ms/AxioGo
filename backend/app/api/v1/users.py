@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import write_audit_log
@@ -37,16 +37,17 @@ async def create_user(
     current_user: AuthenticatedUser = Depends(require_permission("users:manage")),
     db: AsyncSession = Depends(get_db),
 ):
-    existing = await db.execute(select(User).where(User.email == payload.email))
+    normalized_email = payload.email.strip().lower()
+    existing = await db.execute(select(User).where(func.lower(User.email) == normalized_email))
     if existing.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An account with this email address already exists.")
 
     role_result = await db.execute(select(Role).where(Role.name == payload.role))
     role = role_result.scalar_one_or_none()
     if role is None:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown role")
 
-    user = User(name=payload.name, email=payload.email, hashed_password=hash_password(payload.password), role_id=role.id)
+    user = User(name=payload.name.strip(), email=normalized_email, hashed_password=hash_password(payload.password), role_id=role.id)
     db.add(user)
     await db.flush()
 
@@ -57,6 +58,7 @@ async def create_user(
     )
     await db.commit()
     return await _to_user_out(db, user)
+
 
 
 @router.get("/me", response_model=UserOut)

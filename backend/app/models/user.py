@@ -13,6 +13,11 @@ class UserStatus(str, Enum):
     INACTIVE = "INACTIVE"
 
 
+class AuthProviderType(str, Enum):
+    LOCAL = "LOCAL"
+    GOOGLE = "GOOGLE"
+
+
 class RoleName(str, Enum):
     """Exactly three enterprise roles, per api.md / security.md."""
 
@@ -39,6 +44,7 @@ class User(UUIDPKMixin, TimestampMixin, Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role_id: Mapped[str] = mapped_column(ForeignKey("roles.id"), nullable=False, index=True)
+    auth_provider: Mapped[str] = mapped_column(String(32), default=AuthProviderType.LOCAL.value, nullable=False)
     avatar: Mapped[str | None] = mapped_column(String(16), nullable=True)
     status: Mapped[str] = mapped_column(String(16), default=UserStatus.ACTIVE.value, index=True)
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

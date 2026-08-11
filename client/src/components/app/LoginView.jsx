@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const LoginView = ({ onLoginSuccess }) => {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   // ============================================================
   // AUTH MODES
@@ -318,9 +318,21 @@ export const LoginView = ({ onLoginSuccess }) => {
         err
       );
 
-      setError(
-        'Invalid email or password.'
-      );
+      const msg = err?.message || err?.detail || '';
+      const lower = msg.toLowerCase();
+      if (lower.includes('created with google') || lower.includes('google')) {
+        setError(
+          'This account was created with Google. Please continue with Google to sign in.'
+        );
+      } else if (lower.includes('failed to fetch') || lower.includes('network error') || lower.includes('connection')) {
+        setError(
+          'Unable to connect to AxioGo backend server. Please verify the backend is running.'
+        );
+      } else {
+        setError(
+          msg || 'Invalid email or password.'
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -336,7 +348,10 @@ export const LoginView = ({ onLoginSuccess }) => {
     try {
       setIsSubmitting(true);
 
-      await authService.loginWithGoogle();
+      const res = await loginWithGoogle();
+      if (res?.session) {
+        onLoginSuccess();
+      }
 
     } catch (err) {
       console.error(
@@ -348,7 +363,7 @@ export const LoginView = ({ onLoginSuccess }) => {
         err?.message ||
         'Unable to continue with Google.'
       );
-
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -362,15 +377,8 @@ export const LoginView = ({ onLoginSuccess }) => {
 
     clearMessages();
 
-    const normalizedUsername =
-      username.trim().toLowerCase();
-
-    const normalizedEmail =
-      email.trim().toLowerCase();
-
-    // ----------------------------------------------------------
-    // REQUIRED
-    // ----------------------------------------------------------
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     if (
       !normalizedUsername ||
@@ -380,20 +388,12 @@ export const LoginView = ({ onLoginSuccess }) => {
       !password ||
       !confirmPassword
     ) {
-      setError(
-        'Please complete all required fields.'
-      );
+      setError('Please complete all required fields.');
       return;
     }
 
-    // ----------------------------------------------------------
-    // USERNAME
-    // ----------------------------------------------------------
-
     if (normalizedUsername.length < 3) {
-      setError(
-        'Username must contain at least 3 characters.'
-      );
+      setError('Username must contain at least 3 characters.');
       return;
     }
 
@@ -404,57 +404,31 @@ export const LoginView = ({ onLoginSuccess }) => {
       return;
     }
 
-    // ----------------------------------------------------------
-    // EMAIL
-    // ----------------------------------------------------------
-
     if (!isValidEmail(normalizedEmail)) {
-      setError(
-        'Please enter a valid email address.'
-      );
+      setError('Please enter a valid email address.');
       return;
     }
 
-    // ----------------------------------------------------------
-    // PASSWORD
-    // ----------------------------------------------------------
-
-    const passwordError =
-      validatePassword(password);
-
+    const passwordError = validatePassword(password);
     if (passwordError) {
       setError(passwordError);
       return;
     }
-
-    // ----------------------------------------------------------
-    // PASSWORD MATCH
-    // ----------------------------------------------------------
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
 
-    // ----------------------------------------------------------
-    // DOB
-    // ----------------------------------------------------------
-
-    const dob = new Date(
-      `${dateOfBirth}T00:00:00`
-    );
+    const dob = new Date(`${dateOfBirth}T00:00:00`);
 
     if (Number.isNaN(dob.getTime())) {
-      setError(
-        'Please enter a valid date of birth.'
-      );
+      setError('Please enter a valid date of birth.');
       return;
     }
 
     if (dob > new Date()) {
-      setError(
-        'Date of birth cannot be in the future.'
-      );
+      setError('Date of birth cannot be in the future.');
       return;
     }
 
@@ -466,10 +440,6 @@ export const LoginView = ({ onLoginSuccess }) => {
       );
       return;
     }
-
-    // ----------------------------------------------------------
-    // BACKEND ACCOUNT CREATION
-    // ----------------------------------------------------------
 
     setIsSubmitting(true);
 
@@ -484,30 +454,43 @@ export const LoginView = ({ onLoginSuccess }) => {
 
       if (data?.session) {
         setSuccessMessage('Account created successfully.');
-
-        setTimeout(() => {
-          onLoginSuccess();
-        }, 500);
-
+        setTimeout(() => onLoginSuccess(), 500);
         return;
       }
-    } catch (err) {
-      console.error(
-        'Registration failed:',
-        err
+
+      // Supabase email confirmation is handled through the OTP screen.
+      setVerificationEmail(normalizedEmail);
+      setOtp(['', '', '', '', '', '']);
+      setPassword('');
+      setConfirmPassword('');
+      setMode('otp');
+      setResendCooldown(60);
+      setSuccessMessage(
+        'Account created successfully. Enter the verification code sent to your email.'
       );
 
-      const message = err?.message || '';
+      setTimeout(() => {
+        otpRefs.current[0]?.focus();
+      }, 100);
+    } catch (err) {
+      console.error('Registration failed:', err);
+
+      const message = String(err?.message || err?.detail || '');
       const lowerMessage = message.toLowerCase();
       const status = Number(err?.status ?? err?.statusCode ?? 0);
 
-      // --------------------------------------------------------
-      // EXISTING EMAIL / DUPLICATE USER
-      // --------------------------------------------------------
+      if (
+        lowerMessage.includes('created with google') ||
+        lowerMessage.includes('continue with google')
+      ) {
+        setError(
+          'This account was created with Google. Please continue with Google to sign in.'
+        );
+        return;
+      }
 
       if (
         status === 409 ||
-        err?.code === 'EMAIL_ALREADY_EXISTS' ||
         lowerMessage.includes('already registered') ||
         lowerMessage.includes('already exists') ||
         lowerMessage.includes('user already registered') ||
@@ -520,10 +503,6 @@ export const LoginView = ({ onLoginSuccess }) => {
         return;
       }
 
-      // --------------------------------------------------------
-      // RATE LIMIT
-      // --------------------------------------------------------
-
       if (
         status === 429 ||
         lowerMessage.includes('rate limit') ||
@@ -535,16 +514,8 @@ export const LoginView = ({ onLoginSuccess }) => {
         return;
       }
 
-      // --------------------------------------------------------
-      // SERVER / SMTP ERROR
-      // --------------------------------------------------------
-
       if (
-        status === 500 ||
-        status === 502 ||
-        status === 503 ||
-        status === 504 ||
-        status === 505 ||
+        status >= 500 && status <= 505 ||
         lowerMessage.includes('http 500') ||
         lowerMessage.includes('http 502') ||
         lowerMessage.includes('http 503') ||
@@ -556,10 +527,6 @@ export const LoginView = ({ onLoginSuccess }) => {
         );
         return;
       }
-
-      // --------------------------------------------------------
-      // NETWORK ERROR
-      // --------------------------------------------------------
 
       if (
         lowerMessage.includes('failed to fetch') ||
@@ -573,14 +540,7 @@ export const LoginView = ({ onLoginSuccess }) => {
         return;
       }
 
-      // --------------------------------------------------------
-      // GENERIC ERROR
-      // --------------------------------------------------------
-
-      setError(
-        message ||
-        'Unable to create your account. Please try again.'
-      );
+      setError(message || 'Unable to create your account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
