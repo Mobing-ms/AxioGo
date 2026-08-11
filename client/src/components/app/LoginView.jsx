@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const LoginView = ({ onLoginSuccess }) => {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
 
   // ============================================================
   // AUTH MODES
@@ -468,52 +468,22 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
 
     // ----------------------------------------------------------
-    // SUPABASE SIGNUP
+    // BACKEND ACCOUNT CREATION
     // ----------------------------------------------------------
 
     setIsSubmitting(true);
 
     try {
-      const data =
-        await authService.register({
-          email: normalizedEmail,
-          password,
-          username: normalizedUsername,
-          fullName: fullName.trim(),
-          dateOfBirth,
-        });
-
-      // --------------------------------------------------------
-      // EXISTING EMAIL
-      // --------------------------------------------------------
-      // Supabase can return a successful signup response for an
-      // already registered email. In that case, identities may
-      // be returned as an empty array.
-      // --------------------------------------------------------
-
-      if (
-        data?.user &&
-        Array.isArray(data.user.identities) &&
-        data.user.identities.length === 0
-      ) {
-        const existingEmailError = new Error(
-          'An account with this email already exists.'
-        );
-
-        existingEmailError.code =
-          'EMAIL_ALREADY_EXISTS';
-
-        throw existingEmailError;
-      }
-
-      // --------------------------------------------------------
-      // SESSION CREATED
-      // --------------------------------------------------------
+      const data = await register({
+        email: normalizedEmail,
+        password,
+        username: normalizedUsername,
+        fullName: fullName.trim(),
+        dateOfBirth,
+      });
 
       if (data?.session) {
-        setSuccessMessage(
-          'Account created successfully.'
-        );
+        setSuccessMessage('Account created successfully.');
 
         setTimeout(() => {
           onLoginSuccess();
@@ -521,56 +491,22 @@ export const LoginView = ({ onLoginSuccess }) => {
 
         return;
       }
-
-      // --------------------------------------------------------
-      // EMAIL VERIFICATION / OTP
-      // --------------------------------------------------------
-
-      setVerificationEmail(normalizedEmail);
-
-      setOtp([
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]);
-
-      setPassword('');
-      setConfirmPassword('');
-
-      setMode('otp');
-
-      setResendCooldown(60);
-
-      setTimeout(() => {
-        otpRefs.current[0]?.focus();
-      }, 100);
-
     } catch (err) {
       console.error(
         'Registration failed:',
         err
       );
 
-      const message =
-        err?.message || '';
-
-      const lowerMessage =
-        message.toLowerCase();
-
-      const status = Number(
-        err?.status ??
-        err?.statusCode ??
-        ''
-      );
+      const message = err?.message || '';
+      const lowerMessage = message.toLowerCase();
+      const status = Number(err?.status ?? err?.statusCode ?? 0);
 
       // --------------------------------------------------------
-      // EXISTING EMAIL
+      // EXISTING EMAIL / DUPLICATE USER
       // --------------------------------------------------------
 
       if (
+        status === 409 ||
         err?.code === 'EMAIL_ALREADY_EXISTS' ||
         lowerMessage.includes('already registered') ||
         lowerMessage.includes('already exists') ||

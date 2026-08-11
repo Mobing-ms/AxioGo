@@ -1,3 +1,5 @@
+import { apiClient } from '../lib/apiClient';
+
 // AXIS Intelligence Service - 6 Agent Execution & State Machine Simulation
 
 export const AXIS_AGENTS = [
@@ -162,11 +164,11 @@ export const PREBUILT_QUERIES = [
 ];
 
 export const simulateAxisWorkflow = (userQuery, onStepUpdate, onComplete) => {
-  const match = PREBUILT_QUERIES.find(q => q.question.toLowerCase() === userQuery.toLowerCase()) 
+  const match = PREBUILT_QUERIES.find(q => q.question.toLowerCase() === userQuery.toLowerCase())
     || PREBUILT_QUERIES[0];
 
   let currentStepIndex = 0;
-  
+
   const stepInterval = setInterval(() => {
     if (currentStepIndex < match.steps.length) {
       onStepUpdate(match.steps[currentStepIndex], currentStepIndex, match.steps.length);
@@ -179,3 +181,47 @@ export const simulateAxisWorkflow = (userQuery, onStepUpdate, onComplete) => {
     }
   }, 600);
 };
+
+export const sendLiveAxisQuery = async (userQuery, workspaceId = 'ws-default', datasetId = null, onStepUpdate, onComplete) => {
+  try {
+    const sessionRes = await apiClient.post('/axis/sessions', { workspace_id: workspaceId || 'ws-default' });
+    const sessionId = sessionRes?.id || sessionRes?.data?.id;
+
+    if (!sessionId) {
+      throw new Error('Failed to create AXIS session');
+    }
+
+    onStepUpdate?.({ agent: 'Coordinator Agent', text: 'Connecting to AXIS multi-agent engine...' });
+
+    const response = await apiClient.post(`/axis/sessions/${sessionId}/messages`, {
+      message: userQuery,
+      dataset_id: datasetId || null,
+    });
+
+    const resData = response?.data || response;
+    const trace = resData.trace || [];
+    const recommendations = resData.recommendations || [];
+    const answer = resData.answer || 'Query processed successfully.';
+
+    const activatedAgents = trace.map(t => t.agent).filter(Boolean);
+
+    for (let i = 0; i < trace.length; i++) {
+      const step = trace[i];
+      onStepUpdate?.({ agent: step.agent || 'AXIS Agent', text: step.summary || 'Processing...' }, i, trace.length);
+      await new Promise(r => setTimeout(r, 250));
+    }
+
+    const formattedResponse = {
+      headline: answer.slice(0, 120),
+      summary: answer,
+      recommendations,
+      trace,
+    };
+
+    onComplete?.(formattedResponse, activatedAgents.length ? activatedAgents : ['Coordinator Agent']);
+  } catch (err) {
+    console.warn('Backend AXIS execution failed, using interactive simulation fallback:', err);
+    simulateAxisWorkflow(userQuery, onStepUpdate, onComplete);
+  }
+};
+

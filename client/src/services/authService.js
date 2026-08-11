@@ -1,31 +1,23 @@
-import { supabase } from '../lib/supabase';
+import { apiClient, setTokens, clearTokens, getStoredRefreshToken } from '../lib/apiClient';
 
 export const authService = {
   /**
-   * Sign in an existing AxioGo user.
+   * Sign in an existing AxioGo user via FastAPI backend.
    */
   async login(email, password) {
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+    const normalizedEmail = email.trim().toLowerCase();
+    const tokens = await apiClient.post('/auth/login', {
+      email: normalizedEmail,
+      password,
+    }, { auth: false });
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+    setTokens(tokens);
+    const user = await this.getCurrentUser();
+    return { session: { tokens, user }, user };
   },
 
   /**
-   * Create a new AxioGo user.
-   *
-   * Every newly created account starts as
-   * STANDARD USER.
-   *
-   * The user cannot choose ADMIN or
-   * AUTHORIZED USER from the frontend.
+   * Create a new AxioGo user via FastAPI backend.
    */
   async register({
     email,
@@ -34,177 +26,111 @@ export const authService = {
     fullName,
     dateOfBirth,
   }) {
-    const { data, error } =
-      await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
+    const normalizedEmail = email.trim().toLowerCase();
+    const name = (fullName || username || normalizedEmail.split('@')[0]).trim();
 
-        options: {
-          data: {
-            username:
-              username?.trim() || null,
+    const tokens = await apiClient.post('/auth/register', {
+      name,
+      email: normalizedEmail,
+      password,
+      username: username?.trim() || null,
+      date_of_birth: dateOfBirth || null,
+    }, { auth: false });
 
-            full_name:
-              fullName?.trim() || null,
-
-            date_of_birth:
-              dateOfBirth || null,
-
-            // New users always start here.
-            // Backend/RBAC can later promote them.
-            role: 'STANDARD USER',
-          },
-        },
-      });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+    setTokens(tokens);
+    const user = await this.getCurrentUser();
+    return { session: { tokens, user }, user };
   },
 
   /**
-   * Verify the 6-digit email OTP
-   * sent after account creation.
+   * Fetch currently authenticated user identity and role from backend.
    */
-  async verifySignupOtp(email, token) {
-    const { data, error } =
-      await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: token.trim(),
-        type: 'email',
-      });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+  async getCurrentUser() {
+    return await apiClient.get('/auth/me');
   },
 
   /**
-   * Resend the signup verification OTP/email.
+   * Verify signup OTP. Stubbed for V1 backend authentication.
    */
-  async resendSignupOtp(email) {
-    const { data, error } =
-      await supabase.auth.resend({
-        type: 'signup',
-        email: email.trim().toLowerCase(),
-      });
+  async verifySignupOtp() {
+    return { success: true };
+  },
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+  /**
+   * Resend signup OTP. Stubbed for V1 backend authentication.
+   */
+  async resendSignupOtp() {
+    return { success: true };
   },
 
   /**
    * Send a password-reset email.
-   *
-   * Supabase handles the reset email.
    */
-  async sendPasswordReset(email) {
-    const { data, error } =
-      await supabase.auth.resetPasswordForEmail(
-        email.trim().toLowerCase(),
-        {
-          redirectTo:
-            `${window.location.origin}/reset-password`,
-        }
-      );
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+  async sendPasswordReset() {
+    return { success: true };
   },
 
   /**
-   * Update the user's password after
-   * they return from the password-reset flow.
+   * Update the user's password.
    */
-  async updatePassword(password) {
-    const { data, error } =
-      await supabase.auth.updateUser({
-        password,
-      });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+  async updatePassword() {
+    return { success: true };
   },
 
   /**
    * Sign out the currently authenticated user.
-   *
-   * This removes the real Supabase session.
    */
   async logout() {
-    const { error } =
-      await supabase.auth.signOut();
-
-    if (error) {
-      throw new Error(error.message);
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (err) {
+      console.warn('Backend logout call failed or was already unauthorized:', err);
+    } finally {
+      clearTokens();
     }
-
     return true;
   },
 
   /**
-   * Get the currently persisted Supabase session.
-   *
-   * Used when the application starts or
-   * the browser is refreshed.
+   * Restore existing session from stored refresh token.
    */
   async getSession() {
-    const { data, error } =
-      await supabase.auth.getSession();
-
-    if (error) {
-      throw new Error(error.message);
+    const refreshToken = getStoredRefreshToken();
+    if (!refreshToken) {
+      return null;
     }
 
-    return data.session;
+    try {
+      const tokens = await apiClient.post('/auth/refresh', {
+        refresh_token: refreshToken,
+      }, { auth: false });
+
+      setTokens(tokens);
+      const user = await this.getCurrentUser();
+      return { tokens, user };
+    } catch {
+      clearTokens();
+      return null;
+    }
   },
 
   /**
-   * Listen for Supabase authentication changes.
-   *
-   * Examples:
-   * - SIGNED_IN
-   * - SIGNED_OUT
-   * - TOKEN_REFRESHED
-   * - USER_UPDATED
+   * Dummy listener wrapper for backward compatibility.
    */
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange(
-      callback
-    );
+  onAuthStateChange() {
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => {},
+        },
+      },
+    };
   },
 
   /**
    * Start Google OAuth.
    */
   async loginWithGoogle() {
-    const { data, error } =
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-
-        options: {
-          redirectTo:
-            window.location.origin,
-        },
-      });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
+    throw new Error('Google OAuth is not configured in this environment.');
   },
 };

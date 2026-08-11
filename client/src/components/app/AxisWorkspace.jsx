@@ -6,6 +6,7 @@ import { RoleBadge } from '../common/RoleBadge';
 import {
   PREBUILT_QUERIES,
   simulateAxisWorkflow,
+  sendLiveAxisQuery,
 } from '../../services/axisService';
 
 import {
@@ -140,23 +141,21 @@ export const AxisWorkspace = ({
     );
 
 
-    simulateAxisWorkflow(
+    sendLiveAxisQuery(
       q,
+      activeWorkspace?.id,
+      selectedDataset?.id,
 
       (step) => {
-
         setActiveStepText(
           `${step.agent}: ${step.text}`
         );
-
       },
 
       (response, agents) => {
-
         setIsProcessing(false);
         setActiveStepText(null);
         setActivatedAgents(agents);
-
 
         const axisMsg = {
           id: `axis_${Date.now()}`,
@@ -172,12 +171,10 @@ export const AxisWorkspace = ({
           }),
         };
 
-
         setMessages((prev) => [
           ...prev,
           axisMsg,
         ]);
-
       }
     );
 
