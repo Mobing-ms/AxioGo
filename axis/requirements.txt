@@ -1,0 +1,68 @@
+# ==============================
+# AXIS - Core AI
+# ==============================
+
+langchain
+langgraph
+langchain-core
+
+# ==============================
+# LLM Provider
+# ==============================
+
+langchain-openai
+langchain-google-genai
+langchain-huggingface
+
+# ==============================
+# API / Backend
+# ==============================
+
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# ==============================
+# Environment / Configuration
+# ==============================
+
+python-dotenv
+
+# ==============================
+# HTTP / Async
+# ==============================
+
+httpx
+
+# ==============================
+# Databricks
+# ==============================
+
+databricks-sql-connector
+
+# ==============================
+# RAG / Document Processing
+# ==============================
+
+langchain-community
+pypdf
+
+# ==============================
+# Vector Store
+# ==============================
+
+chromadb
+
+# ==============================
+# Authentication / Security
+# ==============================
+
+PyJWT
+
+# ==============================
+# Data / SQL
+# ==============================
+
+pandas
+sqlalchemy

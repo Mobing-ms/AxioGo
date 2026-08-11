@@ -8,30 +8,44 @@ import {
 } from 'lucide-react';
 
 export const LoginView = ({ onLoginSuccess }) => {
-  const { switchRole } = useAuth();
+  const { switchRole, login } = useAuth();
 
   const [email, setEmail] = useState(
     'a.vance@fleet-enterprise.com'
   );
 
-  const [password, setPassword] = useState(
-    '••••••••••••'
-  );
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState(null);
 
   const canvasRef = useRef(null);
 
   // ============================================================
-  // LOGIN LOGIC — KEEPING YOUR ORIGINAL LOGIC
+  // LOGIN LOGIC — now calls the real backend (POST /auth/login)
   // ============================================================
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    onLoginSuccess();
+    setLoginError(null);
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      onLoginSuccess();
+    } catch (err) {
+      setLoginError(err.message || 'Invalid email or password');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleRolePresetLogin = (role) => {
-    switchRole(role);
-    onLoginSuccess();
+  const handleRolePresetLogin = async (role) => {
+    setLoginError(null);
+    try {
+      await switchRole(role);
+      onLoginSuccess();
+    } catch (err) {
+      setLoginError(err.message || 'Demo login failed — is the backend running?');
+    }
   };
 
   // ============================================================
@@ -1140,8 +1154,15 @@ export const LoginView = ({ onLoginSuccess }) => {
 
               {/* SIGN IN */}
 
+              {loginError && (
+                <div className="text-[11px] text-axio-red bg-axio-red/10 border border-axio-red/20 rounded-lg px-3 py-2">
+                  {loginError}
+                </div>
+              )}
+
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="
                   group
                   relative
@@ -1152,6 +1173,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                   rounded-lg
                   bg-axio-red
                   hover:bg-red-600
+                  disabled:opacity-60
+                  disabled:cursor-not-allowed
                   text-white
                   font-bold
                   text-[10px]
@@ -1185,7 +1208,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                 />
 
                 <span className="relative">
-                  SIGN IN TO AXIOGO
+                  {isSubmitting ? 'SIGNING IN…' : 'SIGN IN TO AXIOGO'}
                 </span>
 
                 <ArrowRight
