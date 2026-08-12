@@ -45,23 +45,45 @@ class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body, auth = true, skipRefreshRetry = false } = {}) {
+async function request(path, { method = 'GET', body, auth = true, skipRefreshRetry = false, timeoutMs = 20000 } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth && accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new ApiError(
+        `The AxioGo server did not respond within ${Math.round(timeoutMs / 1000)}s. Please check your connection and try again.`,
+        0,
+        'TIMEOUT'
+      );
+    }
+    throw new ApiError(
+      'Unable to reach the AxioGo server. Please check your connection and try again.',
+      0,
+      'NETWORK_ERROR'
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   // Access token expired mid-session: try one silent refresh, then retry once.
   if (response.status === 401 && auth && !skipRefreshRetry && getStoredRefreshToken()) {
     const refreshed = await tryRefresh();
     if (refreshed) {
-      return request(path, { method, body, auth, skipRefreshRetry: true });
+      return request(path, { method, body, auth, skipRefreshRetry: true, timeoutMs });
     }
     clearTokens();
     onUnauthorized?.();
