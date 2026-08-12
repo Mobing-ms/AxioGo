@@ -19,7 +19,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   const { login, register, loginWithGoogle } = useAuth();
 
   // ============================================================
-  // AUTH MODES
+  // AUTH MODE
   // ============================================================
 
   const [mode, setMode] = useState('login');
@@ -31,8 +31,6 @@ export const LoginView = ({ onLoginSuccess }) => {
     forgot
     reset
   */
-
-  const isRegistering = mode === 'register';
 
   // ============================================================
   // LOGIN / REGISTER STATE
@@ -50,8 +48,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   // OTP STATE
   // ============================================================
 
-  const [verificationEmail, setVerificationEmail] =
-    useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   const [otp, setOtp] = useState([
     '',
@@ -63,19 +60,14 @@ export const LoginView = ({ onLoginSuccess }) => {
 
   const otpRefs = useRef([]);
 
-  const [resendCooldown, setResendCooldown] =
-    useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // ============================================================
   // PASSWORD RESET STATE
   // ============================================================
 
-  const [resetEmail, setResetEmail] =
-    useState('');
-
-  const [newPassword, setNewPassword] =
-    useState('');
-
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [newConfirmPassword, setNewConfirmPassword] =
     useState('');
 
@@ -89,9 +81,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   // PASSWORD VISIBILITY
   // ============================================================
 
-  const [showPassword, setShowPassword] =
-    useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
@@ -99,14 +89,9 @@ export const LoginView = ({ onLoginSuccess }) => {
   // UI STATE
   // ============================================================
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
-
-  const [error, setError] =
-    useState(null);
-
-  const [successMessage, setSuccessMessage] =
-    useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const canvasRef = useRef(null);
 
@@ -117,20 +102,13 @@ export const LoginView = ({ onLoginSuccess }) => {
   useEffect(() => {
     const {
       data: { subscription },
-    } = authService.onAuthStateChange(
-      (event) => {
-        /*
-         * Supabase fires PASSWORD_RECOVERY
-         * when the user opens the password-reset
-         * link.
-         */
-        if (event === 'PASSWORD_RECOVERY') {
-          setMode('reset');
-          setError(null);
-          setSuccessMessage(null);
-        }
+    } = authService.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('reset');
+        setError(null);
+        setSuccessMessage(null);
       }
-    );
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -142,9 +120,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   // ============================================================
 
   useEffect(() => {
-    if (resendCooldown <= 0) {
-      return;
-    }
+    if (resendCooldown <= 0) return;
 
     const timer = setInterval(() => {
       setResendCooldown((current) =>
@@ -163,9 +139,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     const emailRegex =
       /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-    return emailRegex.test(
-      value.trim()
-    );
+    return emailRegex.test(value.trim());
   };
 
   const calculateAge = (dobString) => {
@@ -199,19 +173,13 @@ export const LoginView = ({ onLoginSuccess }) => {
   const getMaxDob = () => {
     const today = new Date();
 
-    /*
-     * User must be OLDER than 10.
-     */
-
     const maxDob = new Date(
       today.getFullYear() - 10,
       today.getMonth(),
       today.getDate() - 1
     );
 
-    return maxDob
-      .toISOString()
-      .split('T')[0];
+    return maxDob.toISOString().split('T')[0];
   };
 
   const validatePassword = (value) => {
@@ -238,10 +206,6 @@ export const LoginView = ({ onLoginSuccess }) => {
     setError(null);
     setSuccessMessage(null);
   };
-
-  // ============================================================
-  // SWITCH MODE
-  // ============================================================
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
@@ -318,19 +282,33 @@ export const LoginView = ({ onLoginSuccess }) => {
         err
       );
 
-      const msg = err?.message || err?.detail || '';
-      const lower = msg.toLowerCase();
-      if (lower.includes('created with google') || lower.includes('google')) {
+      const msg =
+        err?.message ||
+        err?.detail ||
+        '';
+
+      const lower =
+        msg.toLowerCase();
+
+      if (
+        lower.includes('created with google') ||
+        lower.includes('google')
+      ) {
         setError(
           'This account was created with Google. Please continue with Google to sign in.'
         );
-      } else if (lower.includes('failed to fetch') || lower.includes('network error') || lower.includes('connection')) {
+      } else if (
+        lower.includes('failed to fetch') ||
+        lower.includes('network error') ||
+        lower.includes('connection')
+      ) {
         setError(
           'Unable to connect to AxioGo backend server. Please verify the backend is running.'
         );
       } else {
         setError(
-          msg || 'Invalid email or password.'
+          msg ||
+          'Invalid email or password.'
         );
       }
     } finally {
@@ -349,10 +327,10 @@ export const LoginView = ({ onLoginSuccess }) => {
       setIsSubmitting(true);
 
       const res = await loginWithGoogle();
+
       if (res?.session) {
         onLoginSuccess();
       }
-
     } catch (err) {
       console.error(
         'Google OAuth failed:',
@@ -377,8 +355,11 @@ export const LoginView = ({ onLoginSuccess }) => {
 
     clearMessages();
 
-    const normalizedUsername = username.trim().toLowerCase();
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername =
+      username.trim().toLowerCase();
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
     if (
       !normalizedUsername ||
@@ -388,16 +369,24 @@ export const LoginView = ({ onLoginSuccess }) => {
       !password ||
       !confirmPassword
     ) {
-      setError('Please complete all required fields.');
+      setError(
+        'Please complete all required fields.'
+      );
       return;
     }
 
     if (normalizedUsername.length < 3) {
-      setError('Username must contain at least 3 characters.');
+      setError(
+        'Username must contain at least 3 characters.'
+      );
       return;
     }
 
-    if (!/^[a-z0-9._-]+$/.test(normalizedUsername)) {
+    if (
+      !/^[a-z0-9._-]+$/.test(
+        normalizedUsername
+      )
+    ) {
       setError(
         'Username can only contain letters, numbers, dots, underscores, and hyphens.'
       );
@@ -405,34 +394,48 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      setError('Please enter a valid email address.');
+      setError(
+        'Please enter a valid email address.'
+      );
       return;
     }
 
-    const passwordError = validatePassword(password);
+    const passwordError =
+      validatePassword(password);
+
     if (passwordError) {
       setError(passwordError);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(
+        'Passwords do not match.'
+      );
       return;
     }
 
-    const dob = new Date(`${dateOfBirth}T00:00:00`);
+    const dob =
+      new Date(
+        `${dateOfBirth}T00:00:00`
+      );
 
     if (Number.isNaN(dob.getTime())) {
-      setError('Please enter a valid date of birth.');
+      setError(
+        'Please enter a valid date of birth.'
+      );
       return;
     }
 
     if (dob > new Date()) {
-      setError('Date of birth cannot be in the future.');
+      setError(
+        'Date of birth cannot be in the future.'
+      );
       return;
     }
 
-    const age = calculateAge(dateOfBirth);
+    const age =
+      calculateAge(dateOfBirth);
 
     if (age <= 10) {
       setError(
@@ -444,27 +447,46 @@ export const LoginView = ({ onLoginSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      const data = await register({
-        email: normalizedEmail,
-        password,
-        username: normalizedUsername,
-        fullName: fullName.trim(),
-        dateOfBirth,
-      });
+      const data =
+        await register({
+          email: normalizedEmail,
+          password,
+          username: normalizedUsername,
+          fullName: fullName.trim(),
+          dateOfBirth,
+        });
 
       if (data?.session) {
-        setSuccessMessage('Account created successfully.');
-        setTimeout(() => onLoginSuccess(), 500);
+        setSuccessMessage(
+          'Account created successfully.'
+        );
+
+        setTimeout(
+          () => onLoginSuccess(),
+          500
+        );
+
         return;
       }
 
-      // Supabase email confirmation is handled through the OTP screen.
-      setVerificationEmail(normalizedEmail);
-      setOtp(['', '', '', '', '', '']);
+      setVerificationEmail(
+        normalizedEmail
+      );
+
+      setOtp([
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]);
+
       setPassword('');
       setConfirmPassword('');
+
       setMode('otp');
       setResendCooldown(60);
+
       setSuccessMessage(
         'Account created successfully. Enter the verification code sent to your email.'
       );
@@ -472,30 +494,47 @@ export const LoginView = ({ onLoginSuccess }) => {
       setTimeout(() => {
         otpRefs.current[0]?.focus();
       }, 100);
+
     } catch (err) {
-      console.error('Registration failed:', err);
+      console.error(
+        'Registration failed:',
+        err
+      );
 
-      const message = String(err?.message || err?.detail || '');
-      const lowerMessage = message.toLowerCase();
-      const status = Number(err?.status ?? err?.statusCode ?? 0);
-
-      if (
-        lowerMessage.includes('created with google') ||
-        lowerMessage.includes('continue with google')
-      ) {
-        setError(
-          'This account was created with Google. Please continue with Google to sign in.'
+      const message =
+        String(
+          err?.message ||
+          err?.detail ||
+          ''
         );
-        return;
-      }
+
+      const lowerMessage =
+        message.toLowerCase();
+
+      const status =
+        Number(
+          err?.status ??
+          err?.statusCode ??
+          0
+        );
 
       if (
         status === 409 ||
-        lowerMessage.includes('already registered') ||
-        lowerMessage.includes('already exists') ||
-        lowerMessage.includes('user already registered') ||
-        lowerMessage.includes('email already exists') ||
-        lowerMessage.includes('email_exists')
+        lowerMessage.includes(
+          'already registered'
+        ) ||
+        lowerMessage.includes(
+          'already exists'
+        ) ||
+        lowerMessage.includes(
+          'user already registered'
+        ) ||
+        lowerMessage.includes(
+          'email already exists'
+        ) ||
+        lowerMessage.includes(
+          'email_exists'
+        )
       ) {
         setError(
           'An account with this email already exists. Please sign in instead.'
@@ -505,8 +544,12 @@ export const LoginView = ({ onLoginSuccess }) => {
 
       if (
         status === 429 ||
-        lowerMessage.includes('rate limit') ||
-        lowerMessage.includes('too many requests')
+        lowerMessage.includes(
+          'rate limit'
+        ) ||
+        lowerMessage.includes(
+          'too many requests'
+        )
       ) {
         setError(
           'Too many verification requests. Please wait a moment and try again.'
@@ -515,7 +558,8 @@ export const LoginView = ({ onLoginSuccess }) => {
       }
 
       if (
-        status >= 500 && status <= 505 ||
+        (status >= 500 &&
+          status <= 505) ||
         lowerMessage.includes('http 500') ||
         lowerMessage.includes('http 502') ||
         lowerMessage.includes('http 503') ||
@@ -530,10 +574,18 @@ export const LoginView = ({ onLoginSuccess }) => {
       }
 
       if (
-        lowerMessage.includes('failed to fetch') ||
-        lowerMessage.includes('fetch failed') ||
-        lowerMessage.includes('network error') ||
-        lowerMessage.includes('network request failed')
+        lowerMessage.includes(
+          'failed to fetch'
+        ) ||
+        lowerMessage.includes(
+          'fetch failed'
+        ) ||
+        lowerMessage.includes(
+          'network error'
+        ) ||
+        lowerMessage.includes(
+          'network request failed'
+        )
       ) {
         setError(
           'Unable to connect to AxioGo authentication services. Please check your connection and try again.'
@@ -541,55 +593,55 @@ export const LoginView = ({ onLoginSuccess }) => {
         return;
       }
 
-      setError(message || 'Unable to create your account. Please try again.');
+      setError(
+        message ||
+        'Unable to create your account. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // ============================================================
-  // OTP INPUT
+  // OTP
   // ============================================================
 
   const handleOtpChange = (
     index,
     value
   ) => {
-    /*
-     * Only allow digits.
-     */
     const digit =
-      value.replace(/\D/g, '').slice(-1);
+      value
+        .replace(/\D/g, '')
+        .slice(-1);
 
-    const updatedOtp = [...otp];
+    const updatedOtp =
+      [...otp];
 
-    updatedOtp[index] = digit;
+    updatedOtp[index] =
+      digit;
 
     setOtp(updatedOtp);
 
-    /*
-     * Automatically move to next box.
-     */
     if (
       digit &&
-      index < otpRefs.current.length - 1
+      index <
+      otpRefs.current.length - 1
     ) {
       otpRefs.current[
         index + 1
       ]?.focus();
     }
 
-    /*
-     * Automatically verify when
-     * all 6 digits are entered.
-     */
     if (
       digit &&
       index === 5 &&
       updatedOtp.every(Boolean)
     ) {
       setTimeout(() => {
-        handleVerifyOtp(updatedOtp.join(''));
+        handleVerifyOtp(
+          updatedOtp.join('')
+        );
       }, 100);
     }
   };
@@ -598,10 +650,6 @@ export const LoginView = ({ onLoginSuccess }) => {
     index,
     event
   ) => {
-    /*
-     * Backspace on empty box moves
-     * to previous box.
-     */
     if (
       event.key === 'Backspace' &&
       !otp[index] &&
@@ -612,9 +660,6 @@ export const LoginView = ({ onLoginSuccess }) => {
       ]?.focus();
     }
 
-    /*
-     * Left arrow
-     */
     if (
       event.key === 'ArrowLeft' &&
       index > 0
@@ -624,9 +669,6 @@ export const LoginView = ({ onLoginSuccess }) => {
       ]?.focus();
     }
 
-    /*
-     * Right arrow
-     */
     if (
       event.key === 'ArrowRight' &&
       index < 5
@@ -637,11 +679,9 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
   };
 
-  // ============================================================
-  // OTP PASTE
-  // ============================================================
-
-  const handleOtpPaste = (event) => {
+  const handleOtpPaste = (
+    event
+  ) => {
     event.preventDefault();
 
     const pasted =
@@ -650,9 +690,7 @@ export const LoginView = ({ onLoginSuccess }) => {
         .replace(/\D/g, '')
         .slice(0, 6);
 
-    if (!pasted) {
-      return;
-    }
+    if (!pasted) return;
 
     const updatedOtp = [
       '',
@@ -665,9 +703,12 @@ export const LoginView = ({ onLoginSuccess }) => {
 
     pasted
       .split('')
-      .forEach((digit, index) => {
-        updatedOtp[index] = digit;
-      });
+      .forEach(
+        (digit, index) => {
+          updatedOtp[index] =
+            digit;
+        }
+      );
 
     setOtp(updatedOtp);
 
@@ -687,10 +728,6 @@ export const LoginView = ({ onLoginSuccess }) => {
       }, 100);
     }
   };
-
-  // ============================================================
-  // VERIFY OTP
-  // ============================================================
 
   const handleVerifyOtp = async (
     suppliedOtp = null
@@ -722,9 +759,10 @@ export const LoginView = ({ onLoginSuccess }) => {
           'Email verified successfully. Welcome to AxioGo.'
         );
 
-        setTimeout(() => {
-          onLoginSuccess();
-        }, 500);
+        setTimeout(
+          () => onLoginSuccess(),
+          500
+        );
       } else {
         setSuccessMessage(
           'Email verified successfully. You can now sign in.'
@@ -736,6 +774,7 @@ export const LoginView = ({ onLoginSuccess }) => {
           verificationEmail
         );
       }
+
     } catch (err) {
       console.error(
         'OTP verification failed:',
@@ -757,6 +796,7 @@ export const LoginView = ({ onLoginSuccess }) => {
       setTimeout(() => {
         otpRefs.current[0]?.focus();
       }, 50);
+
     } finally {
       setIsSubmitting(false);
     }
@@ -825,7 +865,9 @@ export const LoginView = ({ onLoginSuccess }) => {
     clearMessages();
 
     const normalizedEmail =
-      resetEmail.trim().toLowerCase();
+      resetEmail
+        .trim()
+        .toLowerCase();
 
     if (!normalizedEmail) {
       setError(
@@ -834,7 +876,11 @@ export const LoginView = ({ onLoginSuccess }) => {
       return;
     }
 
-    if (!isValidEmail(normalizedEmail)) {
+    if (
+      !isValidEmail(
+        normalizedEmail
+      )
+    ) {
       setError(
         'Please enter a valid email address.'
       );
@@ -862,6 +908,7 @@ export const LoginView = ({ onLoginSuccess }) => {
         err?.message ||
         'Unable to send the password reset email.'
       );
+
     } finally {
       setIsSubmitting(false);
     }
@@ -912,9 +959,10 @@ export const LoginView = ({ onLoginSuccess }) => {
         'Password updated successfully. You can now sign in.'
       );
 
-      setTimeout(() => {
-        switchMode('login');
-      }, 1000);
+      setTimeout(
+        () => switchMode('login'),
+        1000
+      );
 
     } catch (err) {
       console.error(
@@ -926,6 +974,7 @@ export const LoginView = ({ onLoginSuccess }) => {
         err?.message ||
         'Unable to update your password.'
       );
+
     } finally {
       setIsSubmitting(false);
     }
@@ -970,10 +1019,11 @@ export const LoginView = ({ onLoginSuccess }) => {
       resize
     );
 
+    const isMobile =
+      window.innerWidth < 768;
+
     const particleCount =
-      canvas.width < 768
-        ? 85
-        : 170;
+      isMobile ? 45 : 150;
 
     const particles = [];
 
@@ -992,7 +1042,9 @@ export const LoginView = ({ onLoginSuccess }) => {
       i++
     ) {
       const depth =
-        Math.random() * 0.8 + 0.2;
+        Math.random() *
+        0.8 +
+        0.2;
 
       particles.push({
         x:
@@ -1012,17 +1064,24 @@ export const LoginView = ({ onLoginSuccess }) => {
           0.45,
 
         size:
-          (Math.random() * 1.8 + 0.8) *
-          (0.7 + depth * 0.65),
+          (Math.random() *
+            1.8 +
+            0.8) *
+          (0.7 +
+            depth *
+            0.65),
 
         alpha:
-          Math.random() * 0.32 + 0.08,
+          Math.random() *
+          0.32 +
+          0.08,
 
         depth,
 
         speed:
           0.55 +
-          Math.random() * 0.75,
+          Math.random() *
+          0.75,
 
         phase:
           Math.random() *
@@ -1045,20 +1104,35 @@ export const LoginView = ({ onLoginSuccess }) => {
     let mouseY =
       canvas.height * 0.5;
 
-    let targetMouseX = mouseX;
-    let targetMouseY = mouseY;
+    let targetMouseX =
+      mouseX;
 
-    let mouseActive = false;
+    let targetMouseY =
+      mouseY;
 
-    const ATTRACTION_RADIUS = 260;
-    const REPULSION_RADIUS = 70;
-    const ATTRACTION_STRENGTH = 0.045;
-    const REPULSION_STRENGTH = 0.16;
-    const MAX_SPEED = 3.2;
+    let mouseActive =
+      false;
+
+    const ATTRACTION_RADIUS =
+      260;
+
+    const REPULSION_RADIUS =
+      70;
+
+    const ATTRACTION_STRENGTH =
+      0.045;
+
+    const REPULSION_STRENGTH =
+      0.16;
+
+    const MAX_SPEED =
+      3.2;
 
     const handleMouseMove = (
       event
     ) => {
+      if (isMobile) return;
+
       const rect =
         parent.getBoundingClientRect();
 
@@ -1097,7 +1171,9 @@ export const LoginView = ({ onLoginSuccess }) => {
         canvas.height
       );
 
-      const gridSize = 48;
+      // Grid
+      const gridSize =
+        isMobile ? 36 : 48;
 
       ctx.strokeStyle =
         'rgba(255,255,255,0.018)';
@@ -1110,14 +1186,11 @@ export const LoginView = ({ onLoginSuccess }) => {
         x += gridSize
       ) {
         ctx.beginPath();
-
         ctx.moveTo(x, 0);
-
         ctx.lineTo(
           x,
           canvas.height
         );
-
         ctx.stroke();
       }
 
@@ -1127,14 +1200,11 @@ export const LoginView = ({ onLoginSuccess }) => {
         y += gridSize
       ) {
         ctx.beginPath();
-
         ctx.moveTo(0, y);
-
         ctx.lineTo(
           canvas.width,
           y
         );
-
         ctx.stroke();
       }
 
@@ -1157,14 +1227,19 @@ export const LoginView = ({ onLoginSuccess }) => {
         );
 
       mouseX +=
-        (targetMouseX - mouseX) *
+        (targetMouseX -
+          mouseX) *
         0.11;
 
       mouseY +=
-        (targetMouseY - mouseY) *
+        (targetMouseY -
+          mouseY) *
         0.11;
 
-      if (mouseActive) {
+      if (
+        mouseActive &&
+        !isMobile
+      ) {
         const pointerGlow =
           ctx.createRadialGradient(
             mouseX,
@@ -1216,21 +1291,27 @@ export const LoginView = ({ onLoginSuccess }) => {
         i < particles.length;
         i++
       ) {
-        const p = particles[i];
+        const p =
+          particles[i];
 
         p.vx +=
           Math.sin(
             time * 0.45 +
             p.phase
-          ) * 0.018;
+          ) *
+          0.018;
 
         p.vy +=
           Math.cos(
             time * 0.35 +
             p.phase
-          ) * 0.018;
+          ) *
+          0.018;
 
-        if (mouseActive) {
+        if (
+          mouseActive &&
+          !isMobile
+        ) {
           const dx =
             mouseX - p.x;
 
@@ -1308,7 +1389,9 @@ export const LoginView = ({ onLoginSuccess }) => {
             p.vy * p.vy
           );
 
-        if (speed > MAX_SPEED) {
+        if (
+          speed > MAX_SPEED
+        ) {
           p.vx =
             (p.vx / speed) *
             MAX_SPEED;
@@ -1324,25 +1407,29 @@ export const LoginView = ({ onLoginSuccess }) => {
         p.y +=
           p.vy * p.speed;
 
-        if (p.x < -30)
+        if (p.x < -30) {
           p.x =
             canvas.width + 30;
+        }
 
         if (
           p.x >
           canvas.width + 30
-        )
+        ) {
           p.x = -30;
+        }
 
-        if (p.y < -30)
+        if (p.y < -30) {
           p.y =
             canvas.height + 30;
+        }
 
         if (
           p.y >
           canvas.height + 30
-        )
+        ) {
           p.y = -30;
+        }
 
         ctx.beginPath();
 
@@ -1362,49 +1449,57 @@ export const LoginView = ({ onLoginSuccess }) => {
 
         ctx.fill();
 
-        for (
-          let j = i + 1;
-          j < particles.length;
-          j++
-        ) {
-          const p2 =
-            particles[j];
+        // Connections are reduced on mobile
+        if (!isMobile) {
+          for (
+            let j = i + 1;
+            j < particles.length;
+            j++
+          ) {
+            const p2 =
+              particles[j];
 
-          const dx =
-            p.x - p2.x;
+            const dx =
+              p.x - p2.x;
 
-          const dy =
-            p.y - p2.y;
+            const dy =
+              p.y - p2.y;
 
-          const distance =
-            Math.sqrt(
-              dx * dx +
-              dy * dy
-            );
+            const distance =
+              Math.sqrt(
+                dx * dx +
+                dy * dy
+              );
 
-          if (distance < 85) {
-            ctx.beginPath();
+            if (
+              distance < 85
+            ) {
+              ctx.beginPath();
 
-            ctx.moveTo(
-              p.x,
-              p.y
-            );
+              ctx.moveTo(
+                p.x,
+                p.y
+              );
 
-            ctx.lineTo(
-              p2.x,
-              p2.y
-            );
+              ctx.lineTo(
+                p2.x,
+                p2.y
+              );
 
-            ctx.strokeStyle =
-              'rgba(255,48,70,0.055)';
+              ctx.strokeStyle =
+                'rgba(255,48,70,0.055)';
 
-            ctx.lineWidth = 0.5;
+              ctx.lineWidth =
+                0.5;
 
-            ctx.globalAlpha =
-              (1 - distance / 85) *
-              0.35;
+              ctx.globalAlpha =
+                (1 -
+                  distance /
+                  85) *
+                0.35;
 
-            ctx.stroke();
+              ctx.stroke();
+            }
           }
         }
       }
@@ -1414,7 +1509,9 @@ export const LoginView = ({ onLoginSuccess }) => {
       time += 0.016;
 
       animationFrameId =
-        requestAnimationFrame(draw);
+        requestAnimationFrame(
+          draw
+        );
     };
 
     draw();
@@ -1452,7 +1549,8 @@ export const LoginView = ({ onLoginSuccess }) => {
     border-b
     border-white/[0.10]
     rounded-none
-    px-3
+    px-2.5
+    sm:px-3
     py-3
     pr-10
     text-sm
@@ -1471,7 +1569,8 @@ export const LoginView = ({ onLoginSuccess }) => {
     border
     border-white/[0.08]
     rounded-lg
-    px-4
+    px-3.5
+    sm:px-4
     py-3
     text-sm
     text-white
@@ -1556,30 +1655,33 @@ export const LoginView = ({ onLoginSuccess }) => {
     <div
       className="
         relative
-        h-screen
+        min-h-[100dvh]
         w-full
-        overflow-hidden
+        overflow-x-hidden
+        overflow-y-auto
         bg-axio-bg
         text-white
       "
     >
-      {/* PARTICLES */}
+      {/* ========================================================
+          BACKGROUND
+      ======================================================== */}
 
       <canvas
         ref={canvasRef}
         className="
-          absolute
+          fixed
           inset-0
           z-0
+          h-full
+          w-full
           pointer-events-none
         "
       />
 
-      {/* VIGNETTE */}
-
       <div
         className="
-          absolute
+          fixed
           inset-0
           z-0
           pointer-events-none
@@ -1587,53 +1689,59 @@ export const LoginView = ({ onLoginSuccess }) => {
         "
       />
 
-      {/* RED GLOW */}
-
       <div
         className="
-          absolute
+          fixed
           left-[24%]
           top-1/2
           -translate-y-1/2
-          w-[500px]
-          h-[500px]
+          w-[300px]
+          h-[300px]
+          sm:w-[500px]
+          sm:h-[500px]
           rounded-full
           bg-axio-red/[0.035]
-          blur-[150px]
+          blur-[120px]
+          sm:blur-[150px]
           pointer-events-none
         "
       />
 
-      {/* MAIN */}
+      {/* ========================================================
+          MAIN LAYOUT
+      ======================================================== */}
 
-      <div
+      <main
         className="
           relative
           z-10
-          h-screen
+          min-h-[100dvh]
           w-full
           grid
           grid-cols-1
           lg:grid-cols-[1.15fr_0.85fr]
-          items-center
         "
       >
-        {/* LEFT BRAND */}
+
+        {/* ======================================================
+            BRAND PANEL
+        ====================================================== */}
 
         <section
           className="
             relative
-            h-full
-            flex
+            hidden
+            min-h-[100dvh]
+            lg:flex
             items-center
-            px-8
-            md:px-14
-            lg:px-20
-            xl:px-28
+            px-10
+            xl:px-16
+            2xl:px-24
           "
         >
           <div
             className="
+              w-full
               max-w-3xl
               animate-[brandReveal_1.1s_cubic-bezier(0.16,1,0.3,1)_forwards]
               opacity-0
@@ -1644,13 +1752,15 @@ export const LoginView = ({ onLoginSuccess }) => {
                 flex
                 items-center
                 gap-3
-                mb-6
+                mb-5
+                xl:mb-6
               "
             >
               <span
                 className="
                   w-8
                   h-px
+                  shrink-0
                   bg-axio-red
                   shadow-[0_0_12px_rgba(255,48,70,0.5)]
                 "
@@ -1659,9 +1769,10 @@ export const LoginView = ({ onLoginSuccess }) => {
               <span
                 className="
                   text-[9px]
-                  md:text-[10px]
+                  xl:text-[10px]
                   uppercase
-                  tracking-[0.35em]
+                  tracking-[0.28em]
+                  xl:tracking-[0.35em]
                   text-axio-muted
                 "
               >
@@ -1671,10 +1782,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
             <h1
               className="
-                text-[18vw]
-                sm:text-[15vw]
-                lg:text-[9.5vw]
-                xl:text-[9vw]
+                text-[clamp(4.5rem,9vw,9rem)]
                 leading-[0.78]
                 font-black
                 tracking-[-0.065em]
@@ -1698,11 +1806,11 @@ export const LoginView = ({ onLoginSuccess }) => {
 
             <p
               className="
-                mt-8
+                mt-7
+                xl:mt-8
                 max-w-xl
                 text-sm
-                md:text-base
-                lg:text-lg
+                xl:text-lg
                 leading-relaxed
                 text-axio-text-sub
               "
@@ -1715,16 +1823,19 @@ export const LoginView = ({ onLoginSuccess }) => {
 
             <div
               className="
-                mt-8
+                mt-7
+                xl:mt-8
                 flex
                 flex-wrap
                 items-center
-                gap-x-7
+                gap-x-6
+                xl:gap-x-7
                 gap-y-3
                 text-[8px]
-                md:text-[9px]
+                xl:text-[9px]
                 uppercase
-                tracking-[0.2em]
+                tracking-[0.16em]
+                xl:tracking-[0.2em]
                 text-axio-muted/50
               "
             >
@@ -1733,10 +1844,12 @@ export const LoginView = ({ onLoginSuccess }) => {
                   className="
                     w-1.5
                     h-1.5
+                    shrink-0
                     rounded-full
                     bg-axio-red
                   "
                 />
+
                 TRUSTED DATA
               </div>
 
@@ -1745,10 +1858,12 @@ export const LoginView = ({ onLoginSuccess }) => {
                   className="
                     w-1.5
                     h-1.5
+                    shrink-0
                     rounded-full
                     bg-axio-red/70
                   "
                 />
+
                 BUSINESS CONTEXT
               </div>
 
@@ -1757,46 +1872,92 @@ export const LoginView = ({ onLoginSuccess }) => {
                   className="
                     w-1.5
                     h-1.5
+                    shrink-0
                     rounded-full
                     bg-axio-red/50
                   "
                 />
+
                 INTELLIGENT ACTION
               </div>
             </div>
           </div>
         </section>
 
-        {/* RIGHT AUTH */}
+        {/* ======================================================
+            AUTH PANEL
+        ====================================================== */}
 
         <section
           className="
             relative
-            h-full
+            min-h-[100dvh]
+            w-full
             flex
             items-center
             justify-center
-            px-7
-            md:px-12
-            lg:px-12
-            xl:px-20
+            px-4
+            py-8
+            sm:px-6
+            sm:py-10
+            md:px-10
+            lg:px-10
+            xl:px-16
+            2xl:px-20
           "
         >
+          {/* MOBILE BRAND */}
+
+          <div
+            className="
+              absolute
+              top-6
+              left-0
+              right-0
+              flex
+              justify-center
+              lg:hidden
+              pointer-events-none
+            "
+          >
+            <div
+              className="
+                text-2xl
+                sm:text-3xl
+                font-black
+                tracking-[-0.06em]
+              "
+            >
+              <span className="text-white">
+                AXIO
+              </span>
+
+              <span className="text-axio-red">
+                GO
+              </span>
+            </div>
+          </div>
+
           <div
             className="
               w-full
               max-w-[430px]
-              max-h-[calc(100vh-40px)]
+              my-auto
+              pt-16
+              pb-4
+              sm:pt-16
+              lg:pt-0
               animate-[loginReveal_1s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards]
               opacity-0
             "
           >
+
             {/* HEADER */}
 
             <div
               className={
                 mode === 'register'
-                  ? 'mb-4'
+                  ? 'mb-5'
                   : 'mb-7'
               }
             >
@@ -1805,13 +1966,15 @@ export const LoginView = ({ onLoginSuccess }) => {
                   flex
                   items-center
                   gap-2
-                  mb-3
+                  mb-2.5
+                  sm:mb-3
                 "
               >
                 <span
                   className="
                     w-1.5
                     h-1.5
+                    shrink-0
                     rounded-full
                     bg-axio-red
                     shadow-[0_0_10px_rgba(255,48,70,0.7)]
@@ -1821,9 +1984,11 @@ export const LoginView = ({ onLoginSuccess }) => {
 
                 <span
                   className="
-                    text-[8px]
+                    text-[7px]
+                    sm:text-[8px]
                     uppercase
-                    tracking-[0.25em]
+                    tracking-[0.2em]
+                    sm:tracking-[0.25em]
                     text-axio-muted
                   "
                 >
@@ -1833,7 +1998,8 @@ export const LoginView = ({ onLoginSuccess }) => {
 
               <h2
                 className="
-                  text-2xl
+                  text-[1.65rem]
+                  sm:text-2xl
                   md:text-3xl
                   font-semibold
                   tracking-tight
@@ -1846,9 +2012,11 @@ export const LoginView = ({ onLoginSuccess }) => {
               <p
                 className="
                   mt-1.5
-                  text-[11px]
+                  text-[10px]
+                  sm:text-[11px]
                   leading-relaxed
                   text-axio-muted
+                  max-w-md
                 "
               >
                 {getHeaderDescription()}
@@ -1868,7 +2036,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                   border
                   border-emerald-400/20
                   rounded-lg
-                  px-4
+                  px-3.5
+                  sm:px-4
                   py-3
                 "
               >
@@ -1889,197 +2058,198 @@ export const LoginView = ({ onLoginSuccess }) => {
                   border
                   border-axio-red/20
                   rounded-lg
-                  px-4
+                  px-3.5
+                  sm:px-4
                   py-3
+                  break-words
                 "
               >
                 {error}
               </div>
             )}
 
-            {/* ======================================================
+            {/* ==================================================
                 LOGIN
-            ====================================================== */}
+            ================================================== */}
 
             {mode === 'login' && (
-              <>
-                <form
-                  onSubmit={handleSignIn}
-                  autoComplete="off"
-                  className="space-y-5"
-                >
-                  {/* EMAIL */}
+              <form
+                onSubmit={handleSignIn}
+                autoComplete="off"
+                className="space-y-5"
+              >
+                <div>
+                  <label
+                    className="
+                      block
+                      mb-1.5
+                      text-[8px]
+                      uppercase
+                      tracking-[0.2em]
+                      text-axio-muted
+                    "
+                  >
+                    Email
+                  </label>
 
-                  <div className="group">
-                    <label
-                      className="
-                        block
-                        mb-1.5
-                        text-[8px]
-                        uppercase
-                        tracking-[0.2em]
-                        text-axio-muted
-                      "
-                    >
-                      Email
-                    </label>
+                  <input
+                    type="email"
+                    name="login-email"
+                    value={email}
+                    onChange={(e) =>
+                      setEmail(
+                        e.target.value
+                      )
+                    }
+                    placeholder="you@email.com"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    required
+                    disabled={isSubmitting}
+                    className={
+                      loginInputClass
+                    }
+                  />
+                </div>
 
+                <div>
+                  <label
+                    className="
+                      block
+                      mb-1.5
+                      text-[8px]
+                      uppercase
+                      tracking-[0.2em]
+                      text-axio-muted
+                    "
+                  >
+                    Password
+                  </label>
+
+                  <div className="relative">
                     <input
-                      type="email"
-                      name="login-email"
-                      value={email}
+                      type={
+                        showPassword
+                          ? 'text'
+                          : 'password'
+                      }
+                      name="login-password"
+                      value={password}
                       onChange={(e) =>
-                        setEmail(
+                        setPassword(
                           e.target.value
                         )
                       }
-                      placeholder="you@email.com"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="none"
-                      spellCheck="false"
+                      placeholder="Password"
+                      autoComplete="new-password"
                       required
                       disabled={isSubmitting}
                       className={
                         loginInputClass
                       }
                     />
-                  </div>
 
-                  {/* PASSWORD */}
-
-                  <div className="group">
-                    <label
-                      className="
-                        block
-                        mb-1.5
-                        text-[8px]
-                        uppercase
-                        tracking-[0.2em]
-                        text-axio-muted
-                      "
-                    >
-                      Password
-                    </label>
-
-                    <div className="relative">
-                      <input
-                        type={
-                          showPassword
-                            ? 'text'
-                            : 'password'
-                        }
-                        name="login-password"
-                        value={password}
-                        onChange={(e) =>
-                          setPassword(
-                            e.target.value
-                          )
-                        }
-                        placeholder="Password"
-                        autoComplete="new-password"
-                        required
-                        disabled={isSubmitting}
-                        className={
-                          loginInputClass
-                        }
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPassword(
-                            (value) => !value
-                          )
-                        }
-                        className="
-                          absolute
-                          right-2
-                          bottom-2.5
-                          text-axio-muted
-                          hover:text-white
-                        "
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* FORGOT PASSWORD */}
-
-                  <div className="flex justify-end -mt-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setResetEmail(email);
-                        switchMode('forgot');
-                      }}
-                      disabled={isSubmitting}
+                      onClick={() =>
+                        setShowPassword(
+                          (value) =>
+                            !value
+                        )
+                      }
                       className="
-                        text-[8px]
+                        absolute
+                        right-2
+                        bottom-2.5
+                        p-1
                         text-axio-muted
-                        hover:text-axio-red
-                        transition-colors
+                        hover:text-white
                       "
+                      aria-label={
+                        showPassword
+                          ? 'Hide password'
+                          : 'Show password'
+                      }
                     >
-                      Forgot password?
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
+                </div>
 
-                  {/* SIGN IN */}
-
+                <div className="flex justify-end -mt-2">
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email);
+                      switchMode('forgot');
+                    }}
                     disabled={isSubmitting}
                     className="
-                      group
-                      relative
-                      w-full
-                      overflow-hidden
-                      py-3
-                      rounded-lg
-                      bg-axio-red
-                      hover:bg-red-600
-                      disabled:opacity-60
-                      text-white
-                      font-bold
-                      text-[9px]
-                      uppercase
-                      tracking-[0.2em]
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-                      transition-all
-                      duration-300
+                      text-[8px]
+                      text-axio-muted
+                      hover:text-axio-red
+                      transition-colors
                     "
                   >
-                    <span>
-                      {isSubmitting
-                        ? 'SIGNING IN…'
-                        : 'SIGN IN TO AXIOGO'}
-                    </span>
-
-                    <ArrowRight
-                      className="
-                        w-4
-                        h-4
-                        group-hover:translate-x-1
-                        transition-transform
-                      "
-                    />
+                    Forgot password?
                   </button>
-                </form>
-              </>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="
+                    group
+                    relative
+                    w-full
+                    min-h-11
+                    overflow-hidden
+                    py-3
+                    rounded-lg
+                    bg-axio-red
+                    hover:bg-red-600
+                    disabled:opacity-60
+                    text-white
+                    font-bold
+                    text-[9px]
+                    uppercase
+                    tracking-[0.16em]
+                    sm:tracking-[0.2em]
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    transition-all
+                    duration-300
+                  "
+                >
+                  <span>
+                    {isSubmitting
+                      ? 'SIGNING IN…'
+                      : 'SIGN IN TO AXIOGO'}
+                  </span>
+
+                  <ArrowRight
+                    className="
+                      w-4
+                      h-4
+                      group-hover:translate-x-1
+                      transition-transform
+                    "
+                  />
+                </button>
+              </form>
             )}
 
-            {/* ======================================================
-                CREATE ACCOUNT
-            ====================================================== */}
+            {/* ==================================================
+                REGISTER
+            ================================================== */}
 
             {mode === 'register' && (
               <form
@@ -2092,9 +2262,10 @@ export const LoginView = ({ onLoginSuccess }) => {
                 <div
                   className="
                     grid
-                    grid-cols-2
-                    gap-x-5
-                    gap-y-3
+                    grid-cols-1
+                    sm:grid-cols-2
+                    gap-3
+                    sm:gap-x-5
                   "
                 >
                   <div>
@@ -2172,9 +2343,10 @@ export const LoginView = ({ onLoginSuccess }) => {
                 <div
                   className="
                     grid
-                    grid-cols-2
-                    gap-x-5
-                    gap-y-3
+                    grid-cols-1
+                    sm:grid-cols-2
+                    gap-3
+                    sm:gap-x-5
                   "
                 >
                   <div>
@@ -2246,11 +2418,13 @@ export const LoginView = ({ onLoginSuccess }) => {
                       `}
                     />
 
-                    <p className="
-                      mt-1
-                      text-[7px]
-                      text-axio-muted/50
-                    ">
+                    <p
+                      className="
+                        mt-1
+                        text-[7px]
+                        text-axio-muted/50
+                      "
+                    >
                       Must be older than 10 years
                     </p>
                   </div>
@@ -2261,13 +2435,12 @@ export const LoginView = ({ onLoginSuccess }) => {
                 <div
                   className="
                     grid
-                    grid-cols-2
-                    gap-x-5
-                    gap-y-3
+                    grid-cols-1
+                    sm:grid-cols-2
+                    gap-3
+                    sm:gap-x-5
                   "
                 >
-                  {/* PASSWORD */}
-
                   <div>
                     <label
                       className="
@@ -2319,9 +2492,15 @@ export const LoginView = ({ onLoginSuccess }) => {
                           right-3
                           top-1/2
                           -translate-y-1/2
+                          p-1
                           text-axio-muted
                           hover:text-white
                         "
+                        aria-label={
+                          showPassword
+                            ? 'Hide password'
+                            : 'Show password'
+                        }
                       >
                         {showPassword ? (
                           <EyeOff className="w-4 h-4" />
@@ -2331,8 +2510,6 @@ export const LoginView = ({ onLoginSuccess }) => {
                       </button>
                     </div>
                   </div>
-
-                  {/* CONFIRM */}
 
                   <div>
                     <label
@@ -2387,9 +2564,15 @@ export const LoginView = ({ onLoginSuccess }) => {
                           right-3
                           top-1/2
                           -translate-y-1/2
+                          p-1
                           text-axio-muted
                           hover:text-white
                         "
+                        aria-label={
+                          showConfirmPassword
+                            ? 'Hide password'
+                            : 'Show password'
+                        }
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="w-4 h-4" />
@@ -2402,11 +2585,13 @@ export const LoginView = ({ onLoginSuccess }) => {
                     {confirmPassword &&
                       password !==
                       confirmPassword && (
-                        <p className="
-                          mt-1
-                          text-[7px]
-                          text-axio-red
-                        ">
+                        <p
+                          className="
+                            mt-1
+                            text-[7px]
+                            text-axio-red
+                          "
+                        >
                           Passwords do not match
                         </p>
                       )}
@@ -2416,6 +2601,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                 <div
                   className="
                     text-[7px]
+                    leading-relaxed
                     text-axio-muted/45
                   "
                 >
@@ -2431,6 +2617,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                     group
                     relative
                     w-full
+                    min-h-11
                     overflow-hidden
                     mt-2
                     py-3
@@ -2442,7 +2629,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                     font-bold
                     text-[9px]
                     uppercase
-                    tracking-[0.2em]
+                    tracking-[0.16em]
+                    sm:tracking-[0.2em]
                     flex
                     items-center
                     justify-center
@@ -2460,42 +2648,51 @@ export const LoginView = ({ onLoginSuccess }) => {
               </form>
             )}
 
-            {/* ======================================================
+            {/* ==================================================
                 OTP
-            ====================================================== */}
+            ================================================== */}
 
             {mode === 'otp' && (
               <div className="space-y-6">
-
-                <div className="
-                  text-center
-                  text-[10px]
-                  text-axio-muted
-                  leading-relaxed
-                ">
+                <div
+                  className="
+                    text-center
+                    text-[10px]
+                    text-axio-muted
+                    leading-relaxed
+                  "
+                >
                   We sent a 6-digit verification
                   code to
                   <br />
 
-                  <span className="
-                    text-white
-                    font-semibold
-                  ">
+                  <span
+                    className="
+                      inline-block
+                      max-w-full
+                      px-2
+                      text-white
+                      font-semibold
+                      break-all
+                    "
+                  >
                     {verificationEmail}
                   </span>
                 </div>
-
-                {/* OTP BOXES */}
 
                 <div
                   className="
                     flex
                     justify-center
-                    gap-2
+                    gap-1.5
+                    xs:gap-2
                   "
                 >
                   {otp.map(
-                    (digit, index) => (
+                    (
+                      digit,
+                      index
+                    ) => (
                       <input
                         key={index}
                         ref={(element) => {
@@ -2528,10 +2725,13 @@ export const LoginView = ({ onLoginSuccess }) => {
                           isSubmitting
                         }
                         className="
-                          w-11
-                          h-13
+                          w-9
+                          h-11
+                          sm:w-11
+                          sm:h-13
                           md:w-12
                           md:h-14
+                          shrink-0
                           text-center
                           text-lg
                           font-mono
@@ -2546,6 +2746,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                           focus:bg-white/[0.04]
                           transition-all
                         "
+                        aria-label={`Verification digit ${index + 1
+                          }`}
                       />
                     )
                   )}
@@ -2558,10 +2760,12 @@ export const LoginView = ({ onLoginSuccess }) => {
                   }
                   disabled={
                     isSubmitting ||
-                    otp.join('').length !== 6
+                    otp.join('').length !==
+                    6
                   }
                   className="
                     w-full
+                    min-h-11
                     py-3
                     rounded-lg
                     bg-axio-red
@@ -2580,12 +2784,14 @@ export const LoginView = ({ onLoginSuccess }) => {
                     : 'VERIFY EMAIL'}
                 </button>
 
-                <div className="
-                  flex
-                  flex-col
-                  items-center
-                  gap-3
-                ">
+                <div
+                  className="
+                    flex
+                    flex-col
+                    items-center
+                    gap-3
+                  "
+                >
                   <button
                     type="button"
                     onClick={
@@ -2633,9 +2839,9 @@ export const LoginView = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {/* ======================================================
+            {/* ==================================================
                 FORGOT PASSWORD
-            ====================================================== */}
+            ================================================== */}
 
             {mode === 'forgot' && (
               <form
@@ -2682,6 +2888,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                   disabled={isSubmitting}
                   className="
                     w-full
+                    min-h-11
                     py-3
                     rounded-lg
                     bg-axio-red
@@ -2722,9 +2929,9 @@ export const LoginView = ({ onLoginSuccess }) => {
               </form>
             )}
 
-            {/* ======================================================
+            {/* ==================================================
                 RESET PASSWORD
-            ====================================================== */}
+            ================================================== */}
 
             {mode === 'reset' && (
               <form
@@ -2733,8 +2940,6 @@ export const LoginView = ({ onLoginSuccess }) => {
                 }
                 className="space-y-5"
               >
-                {/* NEW PASSWORD */}
-
                 <div>
                   <label
                     className="
@@ -2785,6 +2990,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                         right-3
                         top-1/2
                         -translate-y-1/2
+                        p-1
                         text-axio-muted
                         hover:text-white
                       "
@@ -2797,8 +3003,6 @@ export const LoginView = ({ onLoginSuccess }) => {
                     </button>
                   </div>
                 </div>
-
-                {/* CONFIRM */}
 
                 <div>
                   <label
@@ -2852,6 +3056,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                         right-3
                         top-1/2
                         -translate-y-1/2
+                        p-1
                         text-axio-muted
                         hover:text-white
                       "
@@ -2867,11 +3072,13 @@ export const LoginView = ({ onLoginSuccess }) => {
                   {newConfirmPassword &&
                     newPassword !==
                     newConfirmPassword && (
-                      <p className="
-                        mt-1
-                        text-[7px]
-                        text-axio-red
-                      ">
+                      <p
+                        className="
+                          mt-1
+                          text-[7px]
+                          text-axio-red
+                        "
+                      >
                         Passwords do not match
                       </p>
                     )}
@@ -2882,6 +3089,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                   disabled={isSubmitting}
                   className="
                     w-full
+                    min-h-11
                     py-3
                     rounded-lg
                     bg-axio-red
@@ -2902,63 +3110,59 @@ export const LoginView = ({ onLoginSuccess }) => {
               </form>
             )}
 
-            {/* ======================================================
-                GOOGLE
-            ====================================================== */}
+            {/* ==================================================
+                GOOGLE — LOGIN ONLY
+            ================================================== */}
 
-            {(mode === 'login' ||
-              mode === 'register') && (
+            {mode === 'login' && (
+              <div className="mt-6">
                 <div
-                  className={
-                    mode === 'register'
-                      ? 'mt-4'
-                      : 'mt-6'
-                  }
-                >
-                  <div
-                    className="
+                  className="
                     flex
                     items-center
                     gap-3
                     mb-3
                   "
-                  >
-                    <div
-                      className="
+                >
+                  <div
+                    className="
                       flex-1
                       h-px
                       bg-white/[0.06]
                     "
-                    />
+                  />
 
-                    <span
-                      className="
+                  <span
+                    className="
                       text-[7px]
                       uppercase
                       tracking-[0.25em]
                       text-axio-muted/35
                     "
-                    >
-                      OR
-                    </span>
+                  >
+                    OR
+                  </span>
 
-                    <div
-                      className="
+                  <div
+                    className="
                       flex-1
                       h-px
                       bg-white/[0.06]
                     "
-                    />
-                  </div>
+                  />
+                </div>
 
-                  <button
-                    type="button"
-                    onClick={
-                      handleGoogleLogin
-                    }
-                    disabled={isSubmitting}
-                    className="
+                <button
+                  type="button"
+                  onClick={
+                    handleGoogleLogin
+                  }
+                  disabled={
+                    isSubmitting
+                  }
+                  className="
                     w-full
+                    min-h-11
                     py-2.5
                     rounded-lg
                     bg-white/[0.02]
@@ -2970,7 +3174,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                     text-[9px]
                     font-semibold
                     uppercase
-                    tracking-[0.16em]
+                    tracking-[0.12em]
+                    sm:tracking-[0.16em]
                     flex
                     items-center
                     justify-center
@@ -2979,25 +3184,25 @@ export const LoginView = ({ onLoginSuccess }) => {
                     duration-300
                     disabled:opacity-50
                   "
-                  >
-                    <span
-                      className="
+                >
+                  <span
+                    className="
                       text-sm
                       font-bold
                       normal-case
                     "
-                    >
-                      G
-                    </span>
+                  >
+                    G
+                  </span>
 
-                    Continue with Google
-                  </button>
-                </div>
-              )}
+                  Continue with Google
+                </button>
+              </div>
+            )}
 
-            {/* ======================================================
-                SWITCH LOGIN / REGISTER
-            ====================================================== */}
+            {/* ==================================================
+                LOGIN / REGISTER SWITCH
+            ================================================== */}
 
             {(mode === 'login' ||
               mode === 'register') && (
@@ -3005,10 +3210,13 @@ export const LoginView = ({ onLoginSuccess }) => {
                   className="
                   mt-5
                   flex
+                  flex-wrap
                   items-center
                   justify-center
-                  gap-2
+                  gap-x-2
+                  gap-y-1
                   text-[9px]
+                  text-center
                 "
                 >
                   {mode === 'register' && (
@@ -3017,12 +3225,15 @@ export const LoginView = ({ onLoginSuccess }) => {
                       onClick={() =>
                         switchMode('login')
                       }
-                      disabled={isSubmitting}
+                      disabled={
+                        isSubmitting
+                      }
                       className="
                       mr-1
                       text-axio-muted
                       hover:text-white
                     "
+                      aria-label="Back to sign in"
                     >
                       <ArrowLeft
                         className="
@@ -3048,7 +3259,9 @@ export const LoginView = ({ onLoginSuccess }) => {
                           : 'register'
                       )
                     }
-                    disabled={isSubmitting}
+                    disabled={
+                      isSubmitting
+                    }
                     className="
                     text-axio-red
                     hover:text-red-400
@@ -3062,18 +3275,23 @@ export const LoginView = ({ onLoginSuccess }) => {
                 </div>
               )}
 
-            {/* STATUS */}
+            {/* ==================================================
+                STATUS
+            ================================================== */}
 
             <div
               className="
                 mt-5
+                pb-1
                 flex
                 justify-center
                 items-center
                 gap-2
-                text-[7px]
+                text-[6px]
+                sm:text-[7px]
                 uppercase
-                tracking-[0.2em]
+                tracking-[0.16em]
+                sm:tracking-[0.2em]
                 text-axio-muted/25
               "
             >
@@ -3081,6 +3299,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                 className="
                   w-1
                   h-1
+                  shrink-0
                   rounded-full
                   bg-axio-red/70
                 "
@@ -3090,11 +3309,11 @@ export const LoginView = ({ onLoginSuccess }) => {
             </div>
           </div>
         </section>
-      </div>
+      </main>
 
-      {/* ============================================================
+      {/* ========================================================
           ANIMATIONS + AUTOFILL
-      ============================================================ */}
+      ======================================================== */}
 
       <style>{`
         @keyframes brandReveal {
@@ -3186,14 +3405,10 @@ export const LoginView = ({ onLoginSuccess }) => {
           }
         }
 
-        @media (max-width: 640px) {
-          form > div.grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
         @media (prefers-reduced-motion: reduce) {
-          * {
+          *,
+          *::before,
+          *::after {
             animation-duration:
               0.01ms !important;
 
