@@ -157,6 +157,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ==========================================================
+  // VERIFY SIGNUP OTP
+  // ==========================================================
+
+  const verifySignupOtp = async (email, token) => {
+    const data = await authService.verifySignupOtp(email, token);
+
+    if (data?.session) {
+      applySession(data.session);
+    }
+
+    return data;
+  };
+
+  // ==========================================================
   // GOOGLE LOGIN
   // ==========================================================
 
@@ -220,6 +234,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
+    verifySignupOtp,
     loginWithGoogle,
     logout,
     switchRole,
