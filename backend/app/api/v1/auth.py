@@ -1,6 +1,10 @@
 import asyncio
 import json
+import time
+from dataclasses import dataclass
+from typing import Dict, Optional
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -50,6 +54,10 @@ GOOGLE_PLACEHOLDER_PASSWORD = (
     "AXIOGO_GOOGLE_ACCOUNT_DO_NOT_USE_AS_PASSWORD"
 )
 
+# Pending registrations are kept out of the database until the
+# user's email/OTP is actually confirmed by Supabase.
+PENDING_REGISTRATION_TTL_SECONDS = 15 * 60
+
 
 # ============================================================
 # REQUEST MODEL FOR SUPABASE TOKEN VERIFICATION
@@ -57,6 +65,53 @@ GOOGLE_PLACEHOLDER_PASSWORD = (
 
 class SupabaseTokenRequest(BaseModel):
     supabase_access_token: str = Field(min_length=1)
+
+
+# ============================================================
+# PENDING REGISTRATION STORE (LOCAL, PRE-DATABASE)
+# ============================================================
+
+@dataclass
+class PendingRegistration:
+    name: str
+    email: str
+    hashed_password: str
+    created_at: float
+    recycle_user_id: Optional[str] = None
+
+
+_pending_registrations: Dict[str, PendingRegistration] = {}
+_pending_lock = asyncio.Lock()
+
+
+def _purge_expired_pending_locked() -> None:
+    now = time.time()
+
+    expired = [
+        email
+        for email, pending in _pending_registrations.items()
+        if now - pending.created_at
+        > PENDING_REGISTRATION_TTL_SECONDS
+    ]
+
+    for email in expired:
+        _pending_registrations.pop(email, None)
+
+
+async def _set_pending_registration(
+    pending: PendingRegistration,
+) -> None:
+    async with _pending_lock:
+        _purge_expired_pending_locked()
+        _pending_registrations[pending.email] = pending
+
+
+async def _pop_pending_registration(
+    email: str,
+) -> Optional[PendingRegistration]:
+    async with _pending_lock:
+        _purge_expired_pending_locked()
+        return _pending_registrations.pop(email, None)
 
 
 # ============================================================
@@ -71,6 +126,14 @@ def _error_message(error) -> str:
         getattr(error, "message", None)
         or getattr(error, "detail", None)
         or ""
+    )
+
+
+def _error_status(error) -> int:
+    return int(
+        getattr(error, "status", None)
+        or getattr(error, "status_code", None)
+        or 0
     )
 
 
@@ -138,7 +201,214 @@ async def _get_supabase_user(
         ) from exc
 
 
-async def _get_user_role(
+async def _supabase_user_exists(email: str) -> bool:
+    """
+    Ask Supabase's `profiles` table directly whether an account
+    exists for this email, instead of trusting our own local
+    `users` table.
+    """
+
+    if (
+        not settings.SUPABASE_URL
+        or not _supabase_admin_key()
+        ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Supabase is not configured.",
+        )
+
+    url = (
+        f"{settings.SUPABASE_URL.rstrip('/')}"
+        f"/rest/v1/profiles"
+        f"?select=id&email=eq.{quote(email)}"
+        f"&limit=1"
+    )
+
+    request = Request(
+        url,
+        headers={
+            "apikey": _supabase_admin_key(),
+    "Authorization": f"Bearer {_supabase_admin_key()}",
+    "Content-Type": "application/json",
+        },
+        method="GET",
+    )
+
+    def make_request():
+        try:
+            with urlopen(request, timeout=10) as response:
+                return json.loads(
+                    response.read().decode("utf-8")
+                )
+
+        except HTTPError as exc:
+            try:
+                exc.read()
+            except Exception:
+                pass
+
+            raise ValueError(
+                "Supabase profiles lookup failed."
+            ) from exc
+
+        except URLError as exc:
+            raise ValueError(
+                "Unable to connect to Supabase."
+            ) from exc
+
+    try:
+        rows = await asyncio.to_thread(make_request)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+
+    return bool(rows)
+
+
+async def _supabase_username_exists(username: str) -> bool:
+    """
+    Check the `profiles` table for an existing username.
+    """
+    if (
+        not settings.SUPABASE_URL
+        or not _supabase_admin_key()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Supabase is not configured.",
+        )
+
+    url = (
+        f"{settings.SUPABASE_URL.rstrip('/')}"
+        f"/rest/v1/profiles"
+        f"?select=id&username=eq.{quote(username)}"
+        f"&limit=1"
+    )
+
+    request = Request(
+        url,
+        headers={
+            "apikey": _supabase_admin_key(),
+            "Authorization": f"Bearer {_supabase_admin_key()}",
+            "Content-Type": "application/json",
+        },
+        method="GET",
+    )
+
+    def make_request():
+        try:
+            with urlopen(request, timeout=10) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            try:
+                exc.read()
+            except Exception:
+                pass
+            raise ValueError("Supabase profiles lookup failed.") from exc
+        except URLError as exc:
+            raise ValueError("Unable to connect to Supabase.") from exc
+
+    try:
+        rows = await asyncio.to_thread(make_request)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+
+    return bool(rows)
+
+
+def _normalize_supabase_role_name(raw_role: str) -> str:
+    """
+    Supabase's `profiles.role` values (e.g. 'AUTHORIZED USER')
+    don't necessarily match the exact string format of your
+    local RoleName enum. Normalize to UPPER_SNAKE_CASE so we can
+    match against local role names regardless of whether they're
+    'ADMIN', 'admin', 'AUTHORIZED_USER', etc.
+    """
+    return raw_role.strip().upper().replace(" ", "_").replace("-", "_")
+
+
+async def _get_supabase_role(email: str) -> Optional[str]:
+    """
+    Look up the `role` column on the Supabase `profiles` table
+    for this email. Returns the normalized role name, or None if
+    no profile/role was found or the lookup failed - callers
+    should fall back to the local role_id in that case.
+    """
+
+    if (
+    not settings.SUPABASE_URL
+    or not _supabase_admin_key()
+    ):
+        return None
+
+    url = (
+        f"{settings.SUPABASE_URL.rstrip('/')}"
+        f"/rest/v1/profiles"
+        f"?select=role&email=eq.{quote(email)}"
+        f"&limit=1"
+    )
+
+    request = Request(
+        url,
+        headers={
+            "apikey": _supabase_admin_key(),
+            "Authorization": f"Bearer {_supabase_admin_key()}",
+            "Content-Type": "application/json",
+        },
+        method="GET",
+    )
+
+    def make_request():
+        try:
+            with urlopen(request, timeout=10) as response:
+                return json.loads(
+                    response.read().decode("utf-8")
+                )
+        except (HTTPError, URLError):
+            return None
+
+    rows = await asyncio.to_thread(make_request)
+
+    if not rows:
+        return None
+
+    raw_role = rows[0].get("role")
+
+    if not raw_role:
+        return None
+
+    return _normalize_supabase_role_name(str(raw_role))
+
+
+async def _get_or_create_role_by_name(
+    db: AsyncSession,
+    role_name: str,
+) -> Role:
+    result = await db.execute(
+        select(Role).where(Role.name == role_name)
+    )
+
+    role = result.scalar_one_or_none()
+
+    if role is None:
+        role = Role(
+            name=role_name,
+            description=f"Auto-created from Supabase role '{role_name}'",
+        )
+
+        db.add(role)
+        await db.flush()
+
+    return role
+
+
+async def _get_local_role_name(
     db: AsyncSession,
     user: User,
 ) -> str:
@@ -155,6 +425,45 @@ async def _get_user_role(
         if role
         else RoleName.STANDARD_USER.value
     )
+
+
+async def _get_user_role(
+    db: AsyncSession,
+    user: User,
+) -> str:
+    """
+    Resolve the role to embed in the JWT, AND keep the local
+    `role_id` in sync with Supabase.
+
+    Supabase's `profiles.role` is the source of truth. We try
+    that first; if the profile/role doesn't exist there, or the
+    Supabase call fails for any reason (network issue, RLS,
+    misconfiguration), we fall back to the local `role_id` so
+    login/verification never hard-fails because of this lookup.
+
+    When a Supabase role IS found and it differs from the local
+    `role_id`, we update the local row to match (find-or-create
+    the matching local Role row) so both stay consistent, not
+    just the JWT. The caller is expected to `db.commit()` shortly
+    after (all current callers already do).
+    """
+
+    supabase_role = await _get_supabase_role(user.email)
+
+    if supabase_role:
+        local_role_name = await _get_local_role_name(db, user)
+
+        if supabase_role != local_role_name:
+            matching_role = await _get_or_create_role_by_name(
+                db, supabase_role
+            )
+
+            user.role_id = matching_role.id
+            await db.flush()
+
+        return supabase_role
+
+    return await _get_local_role_name(db, user)
 
 
 async def _get_standard_role(
@@ -194,23 +503,49 @@ async def register(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Create (or re-sync) the AxioGo backend record that mirrors a
-    Supabase Auth signup.
+    Stage an AxioGo signup for a Supabase email/password user.
 
-    IMPORTANT: this endpoint intentionally does NOT return AxioGo
-    access/refresh tokens. The account is created INACTIVE and can
-    only become ACTIVE through /auth/verify-email, once Supabase has
-    confirmed the user's email. Returning usable tokens here would let
-    anyone skip email verification entirely.
+    - No row is written to the `users` table here.
+    - The "does this account already exist" check now queries
+      Supabase's `profiles` table directly (source of truth),
+      NOT the local axiogo_dev.db - so deleting a user from
+      Supabase no longer leaves a stale row here blocking
+      re-registration.
+    - The AxioGo user row is only created in `/verify-email`,
+      once Supabase confirms the email/OTP.
+    - No AxioGo JWT is issued here.
     """
 
     normalized_email = (
         payload.email.strip().lower()
     )
 
-    # --------------------------------------------------------
-    # CHECK EXISTING USER
-    # --------------------------------------------------------
+    # ========================================================
+    # CHECK EXISTING USER - AGAINST SUPABASE, NOT LOCAL DB
+    # ========================================================
+
+    if await _supabase_user_exists(normalized_email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "An account with this email address "
+                "already exists. Please sign in instead."
+            ),
+        )
+
+    normalized_username = payload.username.strip().lower()
+
+    if await _supabase_username_exists(normalized_username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "This username is already taken. "
+                "Please choose a different one."
+            ),
+    )
+    # ========================================================
+    # CHECK LOCAL ROW - ONLY TO DECIDE GOOGLE-RECYCLE, NOT TO BLOCK
+    # ========================================================
 
     result = await db.execute(
         select(User).where(
@@ -221,120 +556,39 @@ async def register(
 
     existing_user = result.scalar_one_or_none()
 
-    if existing_user is not None:
-        if (
-            existing_user.auth_provider
-            == AuthProviderType.GOOGLE.value
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "This account was created with Google. "
-                    "Please continue with Google to sign in."
-                ),
-            )
+    recycle_user_id: Optional[str] = None
 
-        if (
-            existing_user.status
-            == UserStatus.ACTIVE.value
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "An account with this email address "
-                    "already exists. Please sign in instead."
-                ),
-            )
+    if (
+        existing_user is not None
+        and existing_user.auth_provider
+        == AuthProviderType.GOOGLE.value
+    ):
+        recycle_user_id = str(existing_user.id)
 
-        # --------------------------------------------------------
-        # PARTIAL / UNVERIFIED SIGNUP RETRY
-        #
-        # A LOCAL user that is still INACTIVE means a previous signup
-        # attempt never completed email verification (or the backend
-        # sync step failed after Supabase already created the auth
-        # user). Rather than trapping the person behind a permanent
-        # "already exists" error they can never get past, refresh the
-        # record in place so they can verify and continue.
-        # --------------------------------------------------------
+    # ========================================================
+    # STAGE PENDING REGISTRATION (NO DB WRITE)
+    # ========================================================
 
-        existing_user.name = payload.name.strip()
-        existing_user.hashed_password = hash_password(
-            payload.password
-        )
-
-        await write_audit_log(
-            db,
-            user_id=existing_user.id,
-            role=RoleName.STANDARD_USER.value,
-            event="auth.register_retry",
-            resource="auth",
-            action=(
-                f"User {existing_user.email} retried "
-                "registration before verifying their email"
-            ),
-        )
-
-        await db.commit()
-
-        return RegisterResponse(
-            message=(
-                "Account details updated. Please check your "
-                "email for the verification code."
-            ),
-            email=normalized_email,
-        )
-
-    # --------------------------------------------------------
-    # STANDARD ROLE
-    # --------------------------------------------------------
-
-    role = await _get_standard_role(db)
-
-    # --------------------------------------------------------
-    # CREATE INACTIVE LOCAL USER (PENDING EMAIL VERIFICATION)
-    # --------------------------------------------------------
-
-    try:
-        user = User(
+    await _set_pending_registration(
+        PendingRegistration(
             name=payload.name.strip(),
             email=normalized_email,
             hashed_password=hash_password(
                 payload.password
             ),
-            role_id=role.id,
-            auth_provider=AuthProviderType.LOCAL.value,
-            status=UserStatus.INACTIVE.value,
+            created_at=time.time(),
+            recycle_user_id=recycle_user_id,
         )
-
-        db.add(user)
-        await db.flush()
-
-    except IntegrityError as exc:
-        await db.rollback()
-
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "An account with this email address "
-                "already exists."
-            ),
-        ) from exc
-
-    await write_audit_log(
-        db,
-        user_id=user.id,
-        role=RoleName.STANDARD_USER.value,
-        event="auth.register_success",
-        resource="auth",
-        action=f"User {user.email} registered",
     )
 
-    await db.commit()
+    # ========================================================
+    # RESPONSE
+    # ========================================================
 
     return RegisterResponse(
         message=(
-            "Account created. Please check your email "
-            "for the verification code."
+            "Account details accepted. Please check "
+            "your email for the verification code."
         ),
         email=normalized_email,
     )
@@ -352,6 +606,11 @@ async def verify_email(
     payload: SupabaseTokenRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Create/activate the AxioGo LOCAL account only after
+    Supabase confirms the user's email (OTP verified).
+    """
+
     supabase_user = await _get_supabase_user(
         payload.supabase_access_token
     )
@@ -369,6 +628,10 @@ async def verify_email(
             ),
         )
 
+    # ========================================================
+    # CRITICAL VERIFICATION CHECK
+    # ========================================================
+
     if not supabase_user.get(
         "email_confirmed_at"
     ):
@@ -380,6 +643,16 @@ async def verify_email(
             ),
         )
 
+    # ========================================================
+    # PULL PENDING REGISTRATION DATA (IF ANY)
+    # ========================================================
+
+    pending = await _pop_pending_registration(email)
+
+    # ========================================================
+    # FIND AXIOGO USER
+    # ========================================================
+
     result = await db.execute(
         select(User).where(
             func.lower(User.email) == email
@@ -388,42 +661,37 @@ async def verify_email(
 
     user = result.scalar_one_or_none()
 
+    role = await _get_standard_role(db)
+
+    # ========================================================
+    # CASE 1: NO EXISTING ROW -> CREATE ONE NOW
+    # ========================================================
+
     if user is None:
-        # --------------------------------------------------------
-        # SELF-HEAL A PARTIAL SIGNUP
-        #
-        # Supabase already confirmed this email, but the AxioGo
-        # backend never got (or lost) the matching user record --
-        # e.g. the /auth/register call failed after signUp()
-        # succeeded. Create the record now instead of leaving the
-        # person stuck with a verified Supabase account and no way
-        # into AxioGo.
-        # --------------------------------------------------------
 
-        role = await _get_standard_role(db)
+        if pending is not None:
+            name = pending.name
+            hashed_password = pending.hashed_password
+        else:
+            metadata = (
+                supabase_user.get("user_metadata")
+                or {}
+            )
 
-        metadata = (
-            supabase_user.get("user_metadata") or {}
-        )
+            name = (
+                metadata.get("full_name")
+                or metadata.get("name")
+                or email.split("@")[0]
+            ).strip()
 
-        display_name = (
-            metadata.get("full_name")
-            or metadata.get("name")
-            or email.split("@")[0]
-        ).strip()
+            hashed_password = hash_password(
+                GOOGLE_PLACEHOLDER_PASSWORD
+            )
 
         user = User(
-            name=display_name,
+            name=name,
             email=email,
-
-            # No AxioGo password was ever captured for this
-            # self-healed record; the account remains unusable
-            # for direct login until the person sets a password
-            # through the normal Forgot Password flow.
-            hashed_password=hash_password(
-                GOOGLE_PLACEHOLDER_PASSWORD
-            ),
-
+            hashed_password=hashed_password,
             role_id=role.id,
             auth_provider=AuthProviderType.LOCAL.value,
             status=UserStatus.ACTIVE.value,
@@ -433,6 +701,7 @@ async def verify_email(
 
         try:
             await db.flush()
+
         except IntegrityError as exc:
             await db.rollback()
 
@@ -448,19 +717,70 @@ async def verify_email(
             db,
             user_id=user.id,
             role=RoleName.STANDARD_USER.value,
-            event="auth.verify_email_self_healed",
+            event=(
+                "auth.register_completed"
+                if pending is not None
+                else "auth.verify_email_self_healed"
+            ),
             resource="auth",
             action=(
                 f"AxioGo record for {user.email} was "
-                "recreated during email verification "
-                "after a partial signup"
+                "created after OTP verification"
             ),
         )
 
+    # ========================================================
+    # CASE 2: EXISTING GOOGLE ROW -> RECYCLE TO LOCAL
+    # ========================================================
+
     elif (
         user.auth_provider
-        != AuthProviderType.LOCAL.value
+        == AuthProviderType.GOOGLE.value
     ):
+        if pending is None or pending.recycle_user_id != str(
+            user.id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "This account is not an "
+                    "email/password account."
+                ),
+            )
+
+        user.auth_provider = AuthProviderType.LOCAL.value
+        user.name = pending.name
+        user.hashed_password = pending.hashed_password
+
+        await write_audit_log(
+            db,
+            user_id=user.id,
+            role=RoleName.STANDARD_USER.value,
+            event="auth.google_record_recycled",
+            resource="auth",
+            action=(
+                f"Existing Google record for {user.email} "
+                "was converted to a local account after "
+                "OTP verification"
+            ),
+        )
+
+    # ========================================================
+    # CASE 3: EXISTING LOCAL ROW (STALE, PRE-CHANGE, OR RETRY)
+    # ========================================================
+
+    elif (
+        user.auth_provider
+        == AuthProviderType.LOCAL.value
+    ):
+        if pending is not None:
+            user.name = pending.name
+            user.hashed_password = pending.hashed_password
+
+        if pending is None and user.status == UserStatus.ACTIVE.value:
+            pass
+
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
@@ -469,13 +789,20 @@ async def verify_email(
             ),
         )
 
-    # Activate LOCAL account
+    # ========================================================
+    # ACTIVATE LOCAL ACCOUNT
+    # ========================================================
+
     user.status = UserStatus.ACTIVE.value
 
     role_name = await _get_user_role(
         db,
         user,
     )
+
+    # ========================================================
+    # CREATE AXIOGO TOKENS
+    # ========================================================
 
     access_token = create_access_token(
         user.id,
@@ -507,17 +834,8 @@ async def verify_email(
 
 
 # ============================================================
-# SYNC PASSWORD (FORGOT PASSWORD COMPLETION)
+# SYNC PASSWORD
 # ============================================================
-#
-# AxioGo's own /auth/login checks a password hash stored in the
-# AxioGo database, not Supabase. When a user resets their password
-# through Supabase (client-side supabase.auth.updateUser after the
-# recovery-link flow), that change only exists in Supabase -- the
-# AxioGo hash is never updated, so the person still can't log in
-# with their new password. This endpoint closes that gap: it
-# verifies the Supabase recovery session server-side, then updates
-# the matching AxioGo user's hashed_password so login stays in sync.
 
 @router.post(
     "/sync-password",
@@ -526,6 +844,11 @@ async def sync_password(
     payload: SyncPasswordRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Synchronize a Supabase password reset with the
+    AxioGo password hash.
+    """
+
     supabase_user = await _get_supabase_user(
         payload.supabase_access_token
     )
@@ -542,6 +865,10 @@ async def sync_password(
                 "a verified email address."
             ),
         )
+
+    # ========================================================
+    # FIND USER
+    # ========================================================
 
     result = await db.execute(
         select(User).where(
@@ -560,6 +887,10 @@ async def sync_password(
             ),
         )
 
+    # ========================================================
+    # GOOGLE ACCOUNT
+    # ========================================================
+
     if (
         user.auth_provider
         != AuthProviderType.LOCAL.value
@@ -572,12 +903,14 @@ async def sync_password(
             ),
         )
 
+    # ========================================================
+    # UPDATE PASSWORD
+    # ========================================================
+
     user.hashed_password = hash_password(
         payload.new_password
     )
 
-    # A password reset is a strong signal the person owns the
-    # mailbox; also clears any lingering unverified state.
     user.status = UserStatus.ACTIVE.value
 
     await write_audit_log(
@@ -618,6 +951,10 @@ async def login(
         payload.email.strip().lower()
     )
 
+    # ========================================================
+    # FIND USER
+    # ========================================================
+
     result = await db.execute(
         select(User).where(
             func.lower(User.email)
@@ -627,9 +964,9 @@ async def login(
 
     user = result.scalar_one_or_none()
 
-    # --------------------------------------------------------
+    # ========================================================
     # GOOGLE ACCOUNT
-    # --------------------------------------------------------
+    # ========================================================
 
     if (
         user is not None
@@ -644,9 +981,9 @@ async def login(
             ),
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # INVALID PASSWORD
-    # --------------------------------------------------------
+    # ========================================================
 
     if (
         user is None
@@ -677,9 +1014,9 @@ async def login(
             detail="Invalid email or password",
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # EMAIL VERIFICATION
-    # --------------------------------------------------------
+    # ========================================================
 
     if (
         user.status
@@ -693,9 +1030,9 @@ async def login(
             ),
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # CREATE TOKENS
-    # --------------------------------------------------------
+    # ========================================================
 
     role_name = await _get_user_role(
         db,
@@ -742,7 +1079,12 @@ async def google_auth(
     payload: GoogleAuthRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    # ========================================================
+    # VALIDATE SUPABASE GOOGLE SESSION
+    # ========================================================
+
     if payload.supabase_access_token:
+
         supabase_user = await _get_supabase_user(
             payload.supabase_access_token
         )
@@ -760,14 +1102,25 @@ async def google_auth(
                 ),
             )
 
-        app_metadata = supabase_user.get("app_metadata") or {}
-        identities = supabase_user.get("identities") or []
-        provider = app_metadata.get("provider")
+        app_metadata = (
+            supabase_user.get("app_metadata")
+            or {}
+        )
+
+        identities = (
+            supabase_user.get("identities")
+            or []
+        )
+
+        provider = app_metadata.get(
+            "provider"
+        )
 
         has_google_identity = (
             provider == "google"
             or any(
-                identity.get("provider") == "google"
+                identity.get("provider")
+                == "google"
                 for identity in identities
             )
         )
@@ -781,24 +1134,45 @@ async def google_auth(
                 ),
             )
 
-        metadata = supabase_user.get("user_metadata") or {}
+        metadata = (
+            supabase_user.get("user_metadata")
+            or {}
+        )
+
         display_name = (
             metadata.get("full_name")
             or metadata.get("name")
             or normalized_email.split("@")[0]
         ).strip()
+
+    # ========================================================
+    # FALLBACK EMAIL AUTH REQUEST
+    # ========================================================
+
     elif payload.email:
-        normalized_email = payload.email.strip().lower()
-        display_name = (payload.name or normalized_email.split("@")[0]).strip()
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either supabase_access_token or email is required.",
+
+        normalized_email = (
+            payload.email.strip().lower()
         )
 
-    # --------------------------------------------------------
+        display_name = (
+            payload.name
+            or normalized_email.split("@")[0]
+        ).strip()
+
+    else:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Either supabase_access_token "
+                "or email is required."
+            ),
+        )
+
+    # ========================================================
     # FIND USER
-    # --------------------------------------------------------
+    # ========================================================
 
     result = await db.execute(
         select(User).where(
@@ -809,9 +1183,9 @@ async def google_auth(
 
     user = result.scalar_one_or_none()
 
-    # --------------------------------------------------------
+    # ========================================================
     # CREATE GOOGLE USER
-    # --------------------------------------------------------
+    # ========================================================
 
     if user is None:
 
@@ -820,25 +1194,23 @@ async def google_auth(
         user = User(
             name=display_name,
             email=normalized_email,
-
-            # Password field is unusable placeholder for Google auth
             hashed_password=hash_password(
                 GOOGLE_PLACEHOLDER_PASSWORD
             ),
-
             role_id=role.id,
-
-            auth_provider=
-                AuthProviderType.GOOGLE.value,
-
-            status=
-                UserStatus.ACTIVE.value,
+            auth_provider=(
+                AuthProviderType.GOOGLE.value
+            ),
+            status=(
+                UserStatus.ACTIVE.value
+            ),
         )
 
         db.add(user)
 
         try:
             await db.flush()
+
         except IntegrityError as exc:
             await db.rollback()
 
@@ -850,9 +1222,9 @@ async def google_auth(
                 ),
             ) from exc
 
-    # --------------------------------------------------------
+    # ========================================================
     # EXISTING LOCAL ACCOUNT
-    # --------------------------------------------------------
+    # ========================================================
 
     elif (
         user.auth_provider
@@ -867,12 +1239,19 @@ async def google_auth(
             ),
         )
 
-    else:
-        user.status = UserStatus.ACTIVE.value
+    # ========================================================
+    # EXISTING GOOGLE ACCOUNT
+    # ========================================================
 
-    # --------------------------------------------------------
-    # TOKENS
-    # --------------------------------------------------------
+    else:
+
+        user.status = (
+            UserStatus.ACTIVE.value
+        )
+
+    # ========================================================
+    # CREATE TOKENS
+    # ========================================================
 
     role_name = await _get_user_role(
         db,
@@ -921,17 +1300,24 @@ async def refresh(
     db: AsyncSession = Depends(get_db),
 ):
     try:
+
         decoded = decode_token(
             payload.refresh_token,
             expected_type="refresh",
         )
+
     except TokenError as exc:
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
         ) from exc
 
     user_id = decoded.get("sub")
+
+    # ========================================================
+    # FIND USER
+    # ========================================================
 
     result = await db.execute(
         select(User).where(
@@ -951,12 +1337,20 @@ async def refresh(
             detail="User inactive or not found",
         )
 
+    # ========================================================
+    # ROLE
+    # ========================================================
+
     role_name = await _get_user_role(
         db,
         user,
     )
 
-    return TokenPair(
+    # ========================================================
+    # NEW TOKENS
+    # ========================================================
+
+    tokens = TokenPair(
         access_token=create_access_token(
             user.id,
             role_name,
@@ -965,6 +1359,11 @@ async def refresh(
             user.id,
         ),
     )
+
+    # Persist any local role_id sync performed by _get_user_role.
+    await db.commit()
+
+    return tokens
 
 
 # ============================================================
@@ -998,6 +1397,14 @@ async def logout(
         },
     }
 
+def _supabase_admin_key() -> str | None:
+    """
+    Prefer the service-role secret key for backend-only, RLS-bypassing
+    reads (profiles lookups). Falls back to the publishable/anon key
+    if the secret key isn't configured, so existing behavior (and its
+    RLS limitations) is preserved rather than crashing.
+    """
+    return settings.SUPABASE_SECRET_KEY or settings.SUPABASE_PUBLISHABLE_KEY
 
 # ============================================================
 # CURRENT USER
@@ -1011,6 +1418,7 @@ async def me(
     current_user: AuthenticatedUser =
         Depends(get_current_user),
 ) -> CurrentUserResponse:
+
     return CurrentUserResponse(
         id=current_user.id,
         name=current_user.name,
@@ -1020,3 +1428,5 @@ async def me(
             current_user.permissions
         ),
     )
+
+    

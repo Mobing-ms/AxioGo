@@ -207,21 +207,32 @@ export const AuthProvider = ({ children }) => {
 
   // ==========================================================
   // FRONTEND PERMISSIONS
+  //
+  // Derived directly from the permission strings the backend
+  // returns on `currentUser.permissions` (sourced from
+  // app/models/user.py's ROLE_PERMISSIONS via /auth/me). Do NOT
+  // hardcode role checks here — the backend permission list is
+  // the single source of truth. Hardcoding a second copy here is
+  // exactly what caused datasets:upload to be ignored for
+  // AUTHORIZED_USER even though the backend granted it.
   // ==========================================================
 
-  const canAccessRawData =
-    currentRole === ROLES.ADMIN || currentRole === ROLES.AUTHORIZED;
+  const backendPermissions = currentUser?.permissions || [];
 
-  const canAccessDatabricksOps = currentRole === ROLES.ADMIN;
+  const hasPermission = (permission) =>
+    backendPermissions.includes(permission);
 
-  const canAccessPowerBiRefresh =
-    currentRole === ROLES.ADMIN || currentRole === ROLES.AUTHORIZED;
+  const canAccessRawData = hasPermission('datasets:read');
 
-  const canApproveHighRiskActions = currentRole === ROLES.ADMIN;
+  const canAccessDatabricksOps = hasPermission('databricks:execute');
 
-  const canManageUsers = currentRole === ROLES.ADMIN;
+  const canAccessPowerBiRefresh = hasPermission('powerbi:refresh');
 
-  const canUploadDatasets = currentRole === ROLES.ADMIN;
+  const canApproveHighRiskActions = hasPermission('actions:approve');
+
+  const canManageUsers = hasPermission('users:manage');
+
+  const canUploadDatasets = hasPermission('datasets:upload');
 
   // ==========================================================
   // CONTEXT VALUE
@@ -239,6 +250,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     switchRole,
     ROLES,
+    hasPermission,
     permissions: {
       canAccessRawData,
       canAccessDatabricksOps,

@@ -61,7 +61,6 @@ class UserRegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     username: str | None = None
-    date_of_birth: str | None = None
 
     @field_validator("email", mode="before")
     @classmethod

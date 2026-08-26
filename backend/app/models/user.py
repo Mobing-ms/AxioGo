@@ -49,6 +49,8 @@ class User(UUIDPKMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(16), default=UserStatus.ACTIVE.value, index=True)
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+
+
     role: Mapped["Role"] = relationship(back_populates="users")
 
 
@@ -73,7 +75,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     },
     RoleName.AUTHORIZED_USER.value: {
         "workspaces:read",
-        "datasets:read",
+        "datasets:read", "datasets:upload", "datasets:update", "datasets:delete",
         "catalog:read", "business_context:read", "knowledge:read",
         "analytics:read", "axis:use",
         "reports:read", "reports:create", "reports:download",
