@@ -20,7 +20,8 @@ import {
 export const ReportsView = () => {
   const { currentRole } = useAuth();
 
-  const [reports, setReports] = useState(getReports());
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reportTitle, setReportTitle] = useState(
     'Q3 Enterprise Vehicle Maintenance Analysis'
@@ -31,6 +32,25 @@ export const ReportsView = () => {
   );
   const [isGenerating, setIsGenerating] = useState(false);
 
+  useEffect(() => {
+    let active = true;
+    const fetchReports = async () => {
+      setLoading(true);
+      try {
+        const response = await getReports();
+        if (active) {
+          setReports(response.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchReports();
+    return () => { active = false; };
+  }, []);
+
   /* ============================================================
      CREATE REPORT
   ============================================================ */
@@ -39,13 +59,13 @@ export const ReportsView = () => {
     setIsGenerating(true);
 
     try {
-      const newRep = await generateNewReport(
+      const response = await generateNewReport(
         reportTitle,
         selectedFormat,
         selectedCategory
       );
 
-      setReports((prev) => [newRep, ...prev]);
+      setReports((prev) => [response.data, ...prev]);
       setIsModalOpen(false);
     } finally {
       setIsGenerating(false);

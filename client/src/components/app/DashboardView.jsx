@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { RoleBadge } from '../common/RoleBadge';
 import {
-  FLEET_KPIS,
-  TELEMETRY_ACTIVITY_DATA,
-  AI_INSIGHT_CARDS
+  getFleetKPIs,
+  getTelemetryData,
+  getAiInsights
 } from '../../services/analyticsService';
 
 import {
@@ -38,6 +38,36 @@ export const DashboardView = ({ setActivePage }) => {
     activeFilters,
     setActiveFilters
   } = useWorkspace();
+
+  const [fleetKpis, setFleetKpis] = useState([]);
+  const [telemetryData, setTelemetryData] = useState([]);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [kpiRes, telemetryRes, insightsRes] = await Promise.all([
+          getFleetKPIs(activeFilters),
+          getTelemetryData(activeFilters),
+          getAiInsights()
+        ]);
+        if (active) {
+          setFleetKpis(kpiRes || []);
+          setTelemetryData(telemetryRes || []);
+          setAiInsights(insightsRes || []);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { active = false; };
+  }, [activeFilters]);
 
   const iconMap = {
     Truck,
@@ -234,7 +264,7 @@ export const DashboardView = ({ setActivePage }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-            {FLEET_KPIS.map((kpi, index) => {
+            {fleetKpis.map((kpi, index) => {
 
               const IconComp =
                 iconMap[kpi.icon] || Truck;
@@ -356,7 +386,7 @@ export const DashboardView = ({ setActivePage }) => {
                 height="100%"
               >
 
-                <AreaChart data={TELEMETRY_ACTIVITY_DATA}>
+                <AreaChart data={telemetryData}>
 
                   <defs>
 
@@ -577,7 +607,7 @@ export const DashboardView = ({ setActivePage }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            {AI_INSIGHT_CARDS.map((ins, index) => (
+            {aiInsights.map((ins, index) => (
 
               <div
                 key={ins.id}

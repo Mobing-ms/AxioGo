@@ -160,7 +160,18 @@ def seed_sqlite_lakehouse(db_path: str):
         "wind_speed": "wind_speed_kmph",
         "rainfall_mm": "precipitation_mm"
     }, inplace=True)
-    dim_weather["city"] = dim_weather["location"]
+    
+    # Flatten location dict to city, state, country
+    if "location" in dim_weather.columns:
+        dim_weather["city"] = dim_weather["location"].apply(lambda x: x.get("city") if isinstance(x, dict) else x)
+        dim_weather["state"] = dim_weather["location"].apply(lambda x: x.get("state") if isinstance(x, dict) else "Kerala")
+        dim_weather["country"] = dim_weather["location"].apply(lambda x: x.get("country") if isinstance(x, dict) else "India")
+        dim_weather.drop(columns=["location"], inplace=True)
+    else:
+        dim_weather["city"] = "Kochi"
+        dim_weather["state"] = "Kerala"
+        dim_weather["country"] = "India"
+        
     dim_weather["weather_severity"] = dim_weather["condition"].apply(
         lambda c: "SEVERE" if c in ("Stormy", "Snowy") else "ADVERSE" if c in ("Rainy", "Foggy") else "NORMAL"
     )
@@ -300,6 +311,13 @@ def seed_sqlite_lakehouse(db_path: str):
     fact_insurance_claim["driver_key"] = fact_insurance_claim["driver_id"].map(d_key_map)
     fact_insurance_claim["weather_key"] = 1
     fact_insurance_claim["date_key"] = fact_insurance_claim["accident_timestamp"].dt.strftime("%Y%m%d").fillna(-1).astype(int)
+    
+    # Handle missing columns in the raw CSV
+    if "actual_repair_cost" not in fact_insurance_claim.columns:
+        fact_insurance_claim["actual_repair_cost"] = fact_insurance_claim["estimated_repair_cost"] * 1.05
+    if "days_to_settle" not in fact_insurance_claim.columns:
+        fact_insurance_claim["days_to_settle"] = 14
+        
     fact_insurance_claim["cost_variance"] = fact_insurance_claim["actual_repair_cost"] - fact_insurance_claim["estimated_repair_cost"]
     
     fact_insurance_claim.to_sql("fact_insurance_claim", conn, if_exists="replace", index=False)
@@ -311,6 +329,9 @@ def seed_sqlite_lakehouse(db_path: str):
     # agg_maintenance_summary
     print("Aggregating agg_maintenance_summary...")
     cursor = conn.cursor()
+    
+    # Drop table if exists to allow re-seeding
+    cursor.execute("DROP TABLE IF EXISTS agg_maintenance_summary")
     cursor.execute("""
         CREATE TABLE agg_maintenance_summary AS
         SELECT
@@ -333,6 +354,7 @@ def seed_sqlite_lakehouse(db_path: str):
     
     # agg_fuel_summary
     print("Aggregating agg_fuel_summary...")
+    cursor.execute("DROP TABLE IF EXISTS agg_fuel_summary")
     cursor.execute("""
         CREATE TABLE agg_fuel_summary AS
         SELECT
@@ -352,6 +374,7 @@ def seed_sqlite_lakehouse(db_path: str):
     
     # agg_vehicle_daily
     print("Aggregating agg_vehicle_daily...")
+    cursor.execute("DROP TABLE IF EXISTS agg_vehicle_daily")
     cursor.execute("""
         CREATE TABLE agg_vehicle_daily AS
         SELECT
@@ -378,6 +401,7 @@ def seed_sqlite_lakehouse(db_path: str):
     
     # agg_driver_daily
     print("Aggregating agg_driver_daily...")
+    cursor.execute("DROP TABLE IF EXISTS agg_driver_daily")
     cursor.execute("""
         CREATE TABLE agg_driver_daily AS
         SELECT
@@ -394,6 +418,7 @@ def seed_sqlite_lakehouse(db_path: str):
     
     # agg_route_summary
     print("Aggregating agg_route_summary...")
+    cursor.execute("DROP TABLE IF EXISTS agg_route_summary")
     cursor.execute("""
         CREATE TABLE agg_route_summary AS
         SELECT
@@ -415,7 +440,7 @@ def seed_sqlite_lakehouse(db_path: str):
     
     conn.commit()
     conn.close()
-    print("✅ Local SQLite Lakehouse seeded successfully!")
+    print("Local SQLite Lakehouse seeded successfully!")
 
 if __name__ == "__main__":
     base_dir, _ = get_paths()

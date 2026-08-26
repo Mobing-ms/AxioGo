@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
-  MAINTENANCE_BY_CATEGORY,
-  CLAIMS_SEVERITY_BREAKDOWN,
+  getMaintenanceCategories,
+  getClaimsSeverity,
 } from '../../services/analyticsService';
 import {
   getReports,
@@ -42,7 +42,35 @@ export const AnalyticsView = ({ setActivePage }) => {
 
   const [activeTab, setActiveTab] = useState('Analytics');
 
-  const [reports, setReports] = useState(getReports());
+  const [maintenanceData, setMaintenanceData] = useState([]);
+  const [claimsData, setClaimsData] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [mRes, cRes, rRes] = await Promise.all([
+          getMaintenanceCategories(),
+          getClaimsSeverity(),
+          getReports()
+        ]);
+        if (active) {
+          setMaintenanceData(mRes || []);
+          setClaimsData(cRes || []);
+          setReports(rRes.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching analytics view data:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { active = false; };
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -123,13 +151,13 @@ export const AnalyticsView = ({ setActivePage }) => {
   const handleCreateReport = async () => {
     setIsGenerating(true);
 
-    const newRep = await generateNewReport(
+    const response = await generateNewReport(
       reportTitle,
       selectedFormat,
       selectedCategory
     );
 
-    setReports((prev) => [newRep, ...prev]);
+    setReports((prev) => [response.data, ...prev]);
 
     setIsGenerating(false);
     setIsModalOpen(false);
@@ -423,7 +451,7 @@ export const AnalyticsView = ({ setActivePage }) => {
                       height="100%"
                     >
 
-                      <BarChart data={MAINTENANCE_BY_CATEGORY}>
+                      <BarChart data={maintenanceData}>
 
                         <XAxis
                           dataKey="category"
@@ -513,7 +541,7 @@ export const AnalyticsView = ({ setActivePage }) => {
                       <PieChart>
 
                         <Pie
-                          data={CLAIMS_SEVERITY_BREAKDOWN}
+                          data={claimsData}
                           dataKey="count"
                           nameKey="status"
                           cx="50%"
@@ -523,7 +551,7 @@ export const AnalyticsView = ({ setActivePage }) => {
                           paddingAngle={5}
                         >
 
-                          {CLAIMS_SEVERITY_BREAKDOWN.map(
+                          {claimsData.map(
                             (entry, index) => (
                               <Cell
                                 key={`cell-${index}`}

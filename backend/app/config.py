@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     # Stub adapter until real credentials are supplied.
     DATABRICKS_HOST: str | None = None
     DATABRICKS_TOKEN: str | None = None
+    DATABRICKS_HTTP_PATH: str | None = None
 
     # --- SQL execution guardrails ---
     SQL_READ_ONLY: bool = True
